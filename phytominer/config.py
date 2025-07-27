@@ -16,13 +16,15 @@ DEFAULT_CHUNK = int(os.getenv("PHYTO_CHUNK_SIZE", "16"))
 DEFAULT_WORKERS = int(os.getenv("PHYTO_MAX_WORKERS", "4"))
 
 # --- File and Directory Paths ---
-HOMOLOGS_OUTPUT_FILE = os.getenv("PHYTO_HOMOLOGS_OUTPUT", "step1output.csv")
-HOMOLOGS_CHECKPOINT_DIR = os.getenv("PHYTO_HOMOLOGS_CHECKPOINTS", "step1_checkpoints")
-TSV_DIR = os.getenv("PHYTO_TSV_DIR", str(PROJECT_ROOT / "data" / "tsv"))
-HEATMAP_DIR = os.getenv("PHYTO_HEATMAP_DIR", str(PROJECT_ROOT / "data" / "heatmaps"))
-STEP2_OUTPUT_FILE = os.getenv("PHYTO_STEP2_OUTPUT", "step2output.csv")
-GENE_CHECKPOINT_DIR = os.getenv("PHYTO_GENE_CHECKPOINTS", "step3_checkpoints")
-GENE_OUTPUT_FILE = os.getenv("PHYTO_GENE_OUTPUT", "step3output.csv")
+DATA_DIR = PROJECT_ROOT / "data"
+CHECKPOINTS_DIR = PROJECT_ROOT / "checkpoints"
+TSV_DIR = Path(os.getenv("PHYTO_TSV_DIR", str(DATA_DIR / "tsv")))
+HEATMAP_DIR = Path(os.getenv("PHYTO_HEATMAP_DIR", str(DATA_DIR / "heatmaps")))
+HOMOLOGS_OUTPUT_FILE = Path(os.getenv("PHYTO_HOMOLOGS_OUTPUT", str(DATA_DIR / "step1output.csv"))) 
+HOMOLOGS_CHECKPOINT_DIR = PROJECT_ROOT / str(CHECKPOINTS_DIR / "homologs"
+STEP2_OUTPUT_FILE = Path(os.getenv("PHYTO_STEP2_OUTPUT", str(DATA_DIR / "step2output.csv"))) 
+GENE_CHECKPOINT_DIR = PROJECT_ROOT / str(CHECKPOINTS_DIR / "genes"
+GENE_OUTPUT_FILE = Path(os.getenv("PHYTO_GENES_OUTPUT", str(DATA_DIR / "step3output.csv"))) 
 JOIN_COL = ['primaryIdentifier', 'organism.shortName']
 HOMOLOG_GENE_ID = 'primaryIdentifier'
 TSV_GENE_ID = 'Gene_ID_from_TSV'
