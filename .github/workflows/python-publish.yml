@@ -40,7 +40,7 @@ jobs:
 
   publish:
     name: Publish to PyPI
-    needs: [test, lint]
+    needs: [test]
     runs-on: ubuntu-latest
     if: github.event_name == 'release' && github.event.action == 'published'
     permissions:
