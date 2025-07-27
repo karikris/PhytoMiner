@@ -20,11 +20,11 @@ DATA_DIR = PROJECT_ROOT / "data"
 CHECKPOINTS_DIR = PROJECT_ROOT / "checkpoints"
 TSV_DIR = Path(os.getenv("PHYTO_TSV_DIR", str(DATA_DIR / "tsv")))
 HEATMAP_DIR = Path(os.getenv("PHYTO_HEATMAP_DIR", str(DATA_DIR / "heatmaps")))
-HOMOLOGS_OUTPUT_FILE = Path(os.getenv("PHYTO_HOMOLOGS", str(DATA_DIR / "step1output.csv"))) 
+HOMOLOGS_OUTPUT_FILE = Path(os.getenv("PHYTO_HOMOLOGS", str(DATA_DIR / "step1output.csv")))
 HOMOLOGS_CHECKPOINT_DIR = CHECKPOINTS_DIR / "homologs"
-STEP2_OUTPUT_FILE = Path(os.getenv("PHYTO_STEP2", str(DATA_DIR / "step2output.csv"))) 
+STEP2_OUTPUT_FILE = Path(os.getenv("PHYTO_STEP2", str(DATA_DIR / "step2output.csv")))
 GENE_CHECKPOINT_DIR = CHECKPOINTS_DIR / "genes"
-GENE_OUTPUT_FILE = Path(os.getenv("PHYTO_GENES", str(DATA_DIR / "step3output.csv"))) 
+GENE_OUTPUT_FILE = Path(os.getenv("PHYTO_GENES", str(DATA_DIR / "step3output.csv")))
 
 # --- Column Name Constants ---
 JOIN_COL = ['primaryIdentifier', 'organism.shortName']
@@ -45,12 +45,12 @@ HOMOLOGS_QUERY_VIEW = [
     "ortholog_gene.sequence.length", "ortholog_gene.sequence.residues"]
 GENES_QUERY_VIEW = [
     "length", "primaryIdentifier", "secondaryIdentifier", "organism.commonName",
-    "organism.proteomeId", "organism.shortName", "organism.species", 
-    "coexpressions.highRange", "coexpressions.lowRange", "coexpressions.JSON", 
-    "proteins.length", "proteins.primaryIdentifier", "rnaSeqExpressions.abundance", 
-    "rnaSeqExpressions.confhi", "rnaSeqExpressions.conflo", "rnaSeqExpressions.count", 
+    "organism.proteomeId", "organism.shortName", "organism.species",
+    "coexpressions.highRange", "coexpressions.lowRange", "coexpressions.JSON",
+    "proteins.length", "proteins.primaryIdentifier", "rnaSeqExpressions.abundance",
+    "rnaSeqExpressions.confhi", "rnaSeqExpressions.conflo", "rnaSeqExpressions.count",
     "rnaSeqExpressions.countdispersionvar", "rnaSeqExpressions.countuncertaintyvar",
-    "rnaSeqExpressions.countvariance", "rnaSeqExpressions.libraryExpressionLevel", 
-    "rnaSeqExpressions.experiment.name", "rnaSeqExpressions.experiment.experimentGroup", 
-    "sequence.length", "sequence.residues", "CDSs.gene.CDSs.name", 
+    "rnaSeqExpressions.countvariance", "rnaSeqExpressions.libraryExpressionLevel",
+    "rnaSeqExpressions.experiment.name", "rnaSeqExpressions.experiment.experimentGroup",
+    "sequence.length", "sequence.residues", "CDSs.gene.CDSs.name",
     "CDSs.primaryIdentifier", "CDSs.organism.name"]
