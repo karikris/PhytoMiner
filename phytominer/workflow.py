@@ -1,9 +1,7 @@
 import logging
 import os
 from pathlib import Path
-
 import pandas as pd
-
 from .config import (
     DEFAULT_CHUNK,
     DEFAULT_WORKERS,
@@ -14,7 +12,6 @@ from .config import (
     STEP2_OUTPUT_FILE,
     TSV_DIR
 )
-from .data import read_tsv_files
 from .processing import (
     initial_fetch,
     genes_fetch,
@@ -23,10 +20,10 @@ from .processing import (
     subsequent_fetch,
     load_master_df
 )
+from .data import read_tsv_files
 from .utils import log_summary, pivotmap
 
 logger = logging.getLogger(__name__)
-
 __all__ = ["homologs_pipe", "join_tsvs", "genes_pipe"]
 
 def homologs_pipe(

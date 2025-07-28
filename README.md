@@ -36,7 +36,7 @@ Run genes_pipe to fetch detailed gene data for the final homolog set.
 
 ```python
 import logging
-from phytominer.workflow import step1_homolog_pipe, step2_merge_pipe, step3_gene_pipe
+from phytominer.workflow import homologs_pipe, join_tsvs, genes_pipe
 
 # It's highly recommended to configure logging to see the progress
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -60,20 +60,27 @@ subsequent_organisms = [
 ]
 
 # 2. Run the three-step pipeline
-# Step 1: Fetch all homolog data, starting with the initial organism
-# and iterating through the subsequent ones.
+# Step 1: Fetch homolog data, start with initial organism, iterate through subsequent ones.
 step1_df = homologs_pipe(
     initial_organism=initial_organism,
     initial_genes_dict=initial_genes,
     subsequent_organisms=subsequent_organisms
 )
-
-# Step 2: Merge the homolog data with local TSV files containing additional metadata.
-# This step assumes you have a directory with TSV files (e.g., 'data/tsv/').
-step2_df = join_tsvs()
-
+step1_df.to_csv('step1output.csv', sep=',', index=False)
+# Step 2 (optional): Merge homolog data with TSV files from e.g., 'data/tsv/'.
+step1_csv_path = 'step1output.csv'
+step2_df = join_tsvs(homolog_file=step1_csv_path,
+                     tsv_dir=r"<insert_path_of_tsv_files>",
+                     output_file="step2output.csv")
 # Step 3: Fetch detailed gene data (e.g., expression, sequence) for the homologs found.
-step3_df = genes_pipe()
+checkpoint_dir = r"<insert_path_to_save_checkpoint_files>"
+output_file = 'step2output.csv'
+master_file = 'step1output.csv'
+step3_df = genes_pipe(
+    master_file,
+    checkpoint_dir,
+    output_file
+)
 
 # The final DataFrames are saved to CSV files at each step (e.g., step1output.csv).
 print("PhytoMiner workflow complete!")
@@ -82,13 +89,15 @@ print("PhytoMiner workflow complete!")
 
 ## API Overview
 
-The phytominer library is structured around a sequential, three-step workflow.
+The phytominer library is structured around a sequential, two-step workflow (optional three step).
 
 Workflow Functions
 These are the main functions you'll use, found in phytominer.workflow.
 
 homologs_pipe(...): Orchestrates the entire homolog search. It starts with an initial set of genes, finds their homologs, and then iteratively searches for homologs of the results in other specified organisms. It handles checkpointing and produces a final, processed DataFrame of homolog data.
+
 join_tsvs(...): Takes the output from Step 1 and merges it with local TSV files containing supplementary data (e.g., subunit validation).
+
 genes_pipe(...): Takes the output from Step 2 and fetches detailed gene information (sequences, expression data, etc.) for all unique homologs identified in the pipeline.
 
 ### Utility Functions

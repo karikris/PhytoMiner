@@ -1,6 +1,5 @@
 import pandas as pd
 import logging
-logger = logging.getLogger(__name__)
 import concurrent.futures
 from typing import Union
 from .api import phytozome_homologs, phytozome_genes
@@ -11,6 +10,8 @@ from .config import (
     HOMOLOG_GENE_ID,
     TSV_GENE_ID
 )
+
+logger = logging.getLogger(__name__)
 
 def parallel_chunk_fetch(
     items: list,

@@ -1,8 +1,9 @@
 import pandas as pd
 from pathlib import Path
 import logging
-logger = logging.getLogger(__name__)
 from .config import TSV_DIR
+
+logger = logging.getLogger(__name__)
 
 # --- Subcomplex and Subunit Definitions ---
 SUBCOMPLEX_DICT = {

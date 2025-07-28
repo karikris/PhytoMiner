@@ -1,10 +1,11 @@
 import logging
-logger = logging.getLogger(__name__)
 from pathlib import Path
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from .config import HEATMAP_DIR
+
+logger = logging.getLogger(__name__)
 
 def pivotmap(dataframe, index='organism.shortName', columns='subunit1', values='primaryIdentifier'):
     """

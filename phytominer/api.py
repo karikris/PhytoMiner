@@ -1,18 +1,16 @@
 import pandas as pd
 import logging
-logger = logging.getLogger(__name__)
 import time
 from typing import Dict, List
 from intermine.webservice import Service
 from .config import (
     PHYTOZOME_SERVICE_URL,
-    DEFAULT_WORKERS,
-    DEFAULT_CHUNK,
-    DEFAULT_SLEEP,
     HOMOLOGS_QUERY_VIEW,
     HOMOLOGS_COLUMN_ORDER, 
     GENES_QUERY_VIEW    
     )
+
+logger = logging.getLogger(__name__)
 
 def phytozome_homologs(
     source_organism: str,
