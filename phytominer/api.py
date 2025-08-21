@@ -26,7 +26,6 @@ def phytozome_homologs(
         subunit_map_for_transcripts (dict): A dictionary mapping transcript_identifiers to Subunit names.
     Returns:
         pd.DataFrame: DataFrame containing fetched homolog data for the chunk.
-                      Returns an empty DataFrame if no homologs are found or an error occurs.
     """
     if not transcript_chunk:
         return pd.DataFrame()
@@ -94,13 +93,11 @@ def phytozome_genes(gene_primary_ids: List[str]) -> pd.DataFrame:
 
     Returns:
         pd.DataFrame: A DataFrame containing the fetched gene data.
-                      Returns an empty DataFrame if the input is invalid, no genes are found,
-                      or an error occurs.
     """
     if not gene_primary_ids or not isinstance(gene_primary_ids, (list, tuple)):
         logger.warning(f"Invalid gene list: {gene_primary_ids}")
-        return pd.DataFrame()
-    
+        return pd.DataFrame(columns=GENES_QUERY_VIEW)
+
     service = Service(PHYTOZOME_SERVICE_URL)
     query = service.new_query("Gene")
     query.add_constraint("primaryIdentifier", "ONE OF", gene_primary_ids, code="G")
@@ -108,17 +105,34 @@ def phytozome_genes(gene_primary_ids: List[str]) -> pd.DataFrame:
     query.outerjoin("rnaSeqExpressions")
     query.outerjoin("coexpressions")
     query.outerjoin("CDSs")
-        
+
     query.add_view(*GENES_QUERY_VIEW)
-        
-    try:
-        rows = list(query.rows())
-        if not rows:
-            logger.info("No gene records found for the provided IDs.")
-            return pd.DataFrame()
-        df = pd.DataFrame(rows)
-        logger.info(f"Fetched {len(df)} gene records.")
-        return df
-    except Exception as exc:
-        logger.error(f"Service error fetching genes: {exc}")
-        return pd.DataFrame()
+
+    all_rows: List[Dict] = []
+    max_retries = 5
+    backoff = 0.5
+    for attempt in range(1, max_retries + 1):
+        try:
+            all_rows = [
+                {col: row[col] for col in GENES_QUERY_VIEW}
+                for row in query.rows()
+            ]
+            logger.info(f"Fetched {len(all_rows)} gene records.")
+            break
+        except Exception as exc:
+            logger.warning(f"Attempt {attempt} failed while fetching genes: {exc}")
+            if attempt == max_retries:
+                logger.error("Max retries reached—returning empty result for this batch.")
+                return pd.DataFrame(columns=GENES_QUERY_VIEW)
+            sleep_time = backoff * (2 ** (attempt - 1))
+            time.sleep(sleep_time)
+
+    if not all_rows:
+        logger.info("No gene records found for the provided IDs.")
+        return pd.DataFrame(columns=GENES_QUERY_VIEW)
+
+    df = pd.DataFrame(all_rows)
+    available_cols = [c for c in GENES_QUERY_VIEW if c in df.columns]
+    other_cols = [c for c in df.columns if c not in available_cols]
+    df = df[available_cols + other_cols]
+    return df
