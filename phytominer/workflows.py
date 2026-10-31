@@ -114,6 +114,17 @@ def _discover(client, cache, seeds, targets, expansion_depth, scratch):
     return (all_edges, pl.scan_parquet(feature_parts).unique() if feature_parts else _empty(TABLES['features']),
             pl.scan_parquet(provenance_parts).unique() if provenance_parts else _empty(TABLES['provenance']))
 
+PROCESSING_CONTRACT_VERSION = 2
+
+
+def _result_identity(kind, **inputs):
+    return digest({'kind': kind, 'processing_contract_version': PROCESSING_CONTRACT_VERSION, **inputs})
+
+
+def _target_identity(targets):
+    return {'mode': 'all'} if targets is None else {'mode': 'selected', 'organisms': list(targets)}
+
+
 def _normalize_targets(targets):
     if targets is None:
         return None
@@ -146,8 +157,8 @@ def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_di
         with _run_lock(root):
             cache = RequestCache(root / 'requests', refresh=refresh)
             fingerprint = cache.metadata(client, refresh)
-            identity = digest({'seeds':[asdict(s) for s in seeds], 'targets':sorted(target_organisms or []),
-                'depth':expansion_depth, 'metadata':fingerprint, 'endpoint':client.config.endpoint, 'dataset':client.config.dataset, 'virtual_schema':client.config.virtual_schema})
+            identity = _result_identity('homologs', seeds=[asdict(s) for s in seeds], targets=_target_identity(target_organisms),
+                depth=expansion_depth, metadata=fingerprint, endpoint=client.config.endpoint, dataset=client.config.dataset, virtual_schema=client.config.virtual_schema)
             if not refresh:
                 try:
                     result = HomologDataset(root)
@@ -190,7 +201,7 @@ def fetch_features(genes, *, output_dir, client=None, refresh=False):
     try:
         with _run_lock(root):
             cache=RequestCache(root/'requests'); fingerprint=cache.metadata(client,refresh)
-            identity=digest({'genes':genes,'metadata':fingerprint,'endpoint':client.config.endpoint,'dataset':client.config.dataset,'virtual_schema':client.config.virtual_schema})
+            identity=_result_identity('features', genes=genes, metadata=fingerprint, endpoint=client.config.endpoint, dataset=client.config.dataset, virtual_schema=client.config.virtual_schema)
             if not refresh:
                 try:
                     previous=HomologDataset(root)
@@ -237,7 +248,7 @@ def join_annotations(dataset, annotation_file, *, organism_column='organism_id',
     if root.resolve()==dataset.root.resolve():
         raise ValidationError('Use a separate output directory for annotated datasets')
     with _run_lock(root):
-        writer=DatasetWriter(root,digest({'parent':dataset.manifest['identity'],'annotation':checksum(path)}))
+        writer=DatasetWriter(root,_result_identity('annotations', parent=dataset.manifest['identity'], annotation=checksum(path)))
         for table in dataset.manifest['tables']: writer.write(table,dataset.scan(table))
         writer.write('annotations',annotation)
         writer.write('annotated_genes',result)

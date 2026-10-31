@@ -241,3 +241,10 @@ verifies tuple(iterable) materializes iterators. Normalize once; None and empty
 selection stay distinct, selections sort/deduplicate, empty selection skips
 ortholog requests. Targeted regressions and cumulative suite PASS; clean-tree
 commit handshake required before 1.2.
+
+## Task 1.2 — Processed-result identity
+Previous handshake: Task 1.1 commit. GitHits CPython v3.15.2 JSON serialization
+contracts checked. Canonical target mode and processing contract version 2 apply
+to all processed workflow identities; raw XML cache hashes remain unchanged.
+Both request orders, equivalent selections, and old-result rebuild from raw cache
+pass with the cumulative suite. Task commit/clean-tree handshake PASS.
