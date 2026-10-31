@@ -78,3 +78,11 @@ checksums, schemas and row counts validate every reused part. Split results are
 cached transactionally. Metadata snapshots support offline unchanged resume.
 Acceptance: corruption, input changes, refresh, failed queries and split-cache
 resume tests plus cumulative suite PASS.
+
+## 3.3 Dataset publication
+Previous handshake: validated-cache task commit (git log).
+GitHits polars@2.1.0 src/polars/lazyframe/frame.py:2463-2472 confirms
+sink_parquet Zstandard and row-group options. Each generation has compact tables;
+manifest is published atomically only after all writes. Incomplete runs cannot
+be opened. Acceptance: publication/incomplete/corruption tests and cumulative
+suite PASS; phase 3 ready for remote handshake.

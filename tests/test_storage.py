@@ -57,3 +57,16 @@ def test_split_and_failed_batch(tmp_path):
         def query(self,*args,**kwargs):
             raise ServiceError('bad'); yield
     with pytest.raises(ServiceError): cache.fetch(Fail(),'features',['failed'],'167')
+from phytominer.dataset import DatasetWriter, HomologDataset
+from phytominer.models import IncompleteDatasetError
+import polars as pl
+
+def test_publication_and_incomplete_run(tmp_path):
+    writer = DatasetWriter(tmp_path, {'test':1})
+    with pytest.raises(IncompleteDatasetError): HomologDataset(tmp_path)
+    writer.write('genes', pl.LazyFrame({'organism_id':['167'], 'gene_name':['001']}))
+    result = writer.finish()
+    assert result.scan('genes').collect().rows() == [('167','001')]
+    path = tmp_path / result.manifest['tables']['genes']['file']
+    path.write_bytes(b'corrupt')
+    with pytest.raises(IncompleteDatasetError): HomologDataset(tmp_path)
