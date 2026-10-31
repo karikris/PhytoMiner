@@ -16,6 +16,8 @@ def _discover(
     edge_parts, feature_parts, provenance_parts = [], [], []
     all_edges = _empty(RELATIONSHIP_COLUMNS + ("_retrieval_event_id",))
     for depth in range(1, expansion_depth + 2):
+        if client.run is not None:
+            client.run.check()
         needed = set().union(*frontier.values()) - queried
         if needed:
             raw = raw_fetch(client, cache, _jobs(needed, client.config.batch_size))
@@ -41,6 +43,17 @@ def _discover(
                     pl.col("target_organism_id").is_in(targets)
                     | pl.col("target_organism_name").is_in(targets)
                 )
+            if client.run is not None:
+                client.run.track_genes(
+                    (row[0] or row[1], row[2])
+                    for row in edges.select(
+                        "target_organism_id", "target_organism_name", "target_gene_name"
+                    )
+                    .unique()
+                    .collect()
+                    .iter_rows()
+                )
+                client.run.check_output(scratch)
             edge_path = scratch / f"edges-{depth}.parquet"
             feature_path = scratch / f"features-{depth}.parquet"
             edges.sink_parquet(edge_path)

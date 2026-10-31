@@ -125,6 +125,11 @@ class DatasetWriter:
         temp = path.with_suffix(".parquet.tmp")
         try:
             frame.sink_parquet(temp, compression="zstd", row_group_size=65536)
+            from .run import CURRENT_RUN
+
+            active = CURRENT_RUN.get()
+            if active is not None:
+                active.check_output(self.directory)
             os.replace(temp, path)
         finally:
             temp.unlink(missing_ok=True)
@@ -136,6 +141,11 @@ class DatasetWriter:
         atomic_json(self.directory / "manifest.json", self.manifest)
 
     def finish(self, **details):
+        from .run import CURRENT_RUN
+
+        active = CURRENT_RUN.get()
+        if active is not None:
+            active.check_output(self.directory)
         candidate = {**self.manifest, **details, "status": "complete"}
         pinned = HomologDataset._from_manifest(self.root, candidate)
         atomic_json(self.directory / "manifest.json", pinned.manifest)

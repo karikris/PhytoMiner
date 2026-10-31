@@ -421,3 +421,7 @@ Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake 
 ## 1.0.2 task 3.3
 Previous handshake: 6550018. GitHits Polars 2.1.0 expressions reviewed. Outcomes are unique per seed; refresh is explicit when feature evidence changes. Phase 3 catalog/cache/outcomes integration passes.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 1.0.2 task 4.1
+Previous handshake: b764cac. GitHits CPython monotonic timing reviewed. Budget reservations count real HTTP attempts and preserve previous publications; controls default to unlimited.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.

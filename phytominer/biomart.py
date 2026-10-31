@@ -71,7 +71,7 @@ class BioMartClient:
             started = time.monotonic()
             try:
                 if self.run is not None:
-                    self.run.counters["http_attempts"] += 1
+                    self.run.before_http()
                 response = self._session().request(
                     method,
                     self.config.endpoint,

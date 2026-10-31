@@ -4,6 +4,7 @@ from dataclasses import asdict
 from pathlib import Path
 from .outcomes import write_outcomes
 from .evidence import write_evidence
+from .limits import RunLimits
 from .run import run_context
 from .contracts import Seeds, Targets
 lazy import polars as pl
@@ -38,6 +39,7 @@ def fetch_homologs(
     client: BioMartClient | None = None,
     refresh: bool = False,
     progress=None,
+    limits: RunLimits | None = None,
 ) -> HomologDataset:
     """Retrieve reported seed relationships; labels never multiply edge evidence."""
     seed_records = sorted(
@@ -59,7 +61,7 @@ def fetch_homologs(
     owned = client is None
     client = client or BioMartClient()
     try:
-        with _run_lock(root), run_context(root, client, progress) as run:
+        with _run_lock(root), run_context(root, client, progress, limits) as run:
             run.outcomes = [
                 {
                     "organism_id": s.organism_id,
@@ -99,6 +101,7 @@ def fetch_homologs(
                         return result
                 except IncompleteDatasetError:
                     pass
+            run.track_genes((s.organism_id, s.gene_name) for s in seed_records)
             writer = DatasetWriter(root, identity, kind="homologs")
             seed_frame = pl.LazyFrame(
                 [asdict(s) for s in seed_records],
@@ -202,6 +205,7 @@ def fetch_features(
     client: BioMartClient | None = None,
     refresh: bool = False,
     progress=None,
+    limits: RunLimits | None = None,
 ) -> HomologDataset:
     """Retrieve transcript-grain features for organism-qualified genes."""
     gene_keys = sorted({(s.organism_id, s.gene_name) for s in normalize_seeds(genes)})
@@ -211,7 +215,7 @@ def fetch_features(
     owned = client is None
     client = client or BioMartClient()
     try:
-        with _run_lock(root), run_context(root, client, progress) as run:
+        with _run_lock(root), run_context(root, client, progress, limits) as run:
             cache = RequestCache(root / "requests")
             with run.stage("metadata"):
                 fingerprint = cache.metadata(client, refresh)
@@ -235,6 +239,7 @@ def fetch_features(
                         return previous
                 except IncompleteDatasetError:
                     pass
+            run.track_genes(gene_keys)
             writer = DatasetWriter(root, identity, kind="features")
             jobs = (
                 ("features", batch, org)

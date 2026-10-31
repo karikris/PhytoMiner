@@ -21,6 +21,8 @@ lazy from .models import (
 )
 
 
+lazy from .limits import RunLimits
+
 __all__ = [
     "ClientConfig",
     "Seed",
@@ -39,3 +41,5 @@ __all__ += [
     "DeadlineExceededError",
     "BudgetExceededError",
 ]
+
+__all__ += ["RunLimits"]

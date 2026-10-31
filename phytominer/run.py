@@ -2,14 +2,24 @@
 
 import time
 import uuid
+import threading
+from contextvars import ContextVar
+from .limits import RunLimits
+from .models import BudgetExceededError, DeadlineExceededError
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from .storage import atomic_json
 from .models import ValidationError
 
 
+CURRENT_RUN: ContextVar = ContextVar("phytominer_run", default=None)
+
+
 class RunContext:
-    def __init__(self, root, client, callback=None):
+    def __init__(self, root, client, callback=None, limits=None):
+        self.limits = limits or RunLimits()
+        self.genes = set()
+        self.guard = threading.Lock()
         self.id = uuid.uuid4().hex
         self.root = root
         self.client = client
@@ -28,6 +38,42 @@ class RunContext:
         self.status = "running"
         self.reason: str | None = None
         self.started_at = datetime.now(timezone.utc).isoformat()
+
+    def check(self):
+        if (
+            self.limits.max_seconds is not None
+            and time.monotonic() - self.started >= self.limits.max_seconds
+        ):
+            raise DeadlineExceededError("Invocation deadline expired")
+
+    def track_genes(self, identities):
+        self.check()
+        self.genes.update(identities)
+        if (
+            self.limits.max_genes is not None
+            and len(self.genes) > self.limits.max_genes
+        ):
+            raise BudgetExceededError("max_genes", len(self.genes))
+
+    def before_http(self):
+        with self.guard:
+            self.check()
+            count = self.counters["http_attempts"] + 1
+            if (
+                self.limits.max_requests is not None
+                and count > self.limits.max_requests
+            ):
+                raise BudgetExceededError("max_requests", count)
+            self.counters["http_attempts"] = count
+
+    def check_output(self, directory):
+        self.check()
+        size = sum(p.stat().st_size for p in directory.rglob("*") if p.is_file())
+        if (
+            self.limits.max_output_bytes is not None
+            and size > self.limits.max_output_bytes
+        ):
+            raise BudgetExceededError("max_output_bytes", size)
 
     def emit(self, event, **values):
         if self.callback:
@@ -67,10 +113,11 @@ class RunContext:
 
 
 @contextmanager
-def run_context(root, client, callback=None):
+def run_context(root, client, callback=None, limits=None):
     if client.run is not None:
         raise ValidationError("Client already has an active run")
-    run = RunContext(root, client, callback)
+    run = RunContext(root, client, callback, limits)
+    token = CURRENT_RUN.set(run)
     client.run = run
     try:
         run.emit("run_started")
@@ -86,4 +133,5 @@ def run_context(root, client, callback=None):
     finally:
         run.save()
         client.run = None
+        CURRENT_RUN.reset(token)
         run.emit("run_finished", status=run.status)
