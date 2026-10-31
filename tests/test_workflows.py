@@ -52,3 +52,16 @@ def test_expansion_multiple_roots_and_boundary(tmp_path):
     result=fetch_homologs([Seed('1','a'),Seed('2','b')],target_organisms=['2'],expansion_depth=2,output_dir=tmp_path,client=c)
     rows=result.scan('relationships').collect().to_dicts()
     assert all(r['target_organism_id']=='2' for r in rows)
+from phytominer import fetch_features, join_annotations
+
+def test_feature_retrieval_and_annotations(tmp_path):
+    dataset=fetch_features([Seed('1','a'),Seed('2','a')],output_dir=tmp_path/'features',client=FixtureClient())
+    assert dataset.scan('features').collect().height==4
+    annotation=tmp_path/'annotation.tsv'
+    annotation.write_text('organism_id\tgene_name\tsubunit\n1\ta\tX\n')
+    rows=join_annotations(dataset,annotation).sort('organism_id').collect()
+    assert rows['annotation_match'].to_list()==[True,False]
+    annotated=join_annotations(dataset,annotation,output_dir=tmp_path/'annotated')
+    assert annotated.scan('annotations').collect().height==1
+    annotation.write_text('organism_id\tgene_name\tsubunit\n1\ta\tX\n1\ta\tY\n')
+    with pytest.raises(Exception,match='unique'): join_annotations(dataset,annotation)

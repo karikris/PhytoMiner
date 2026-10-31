@@ -154,10 +154,78 @@ def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_di
             writer.write('relationships',edges.sort(TABLES['relationships']))
             writer.write('provenance',provenance.select(TABLES['provenance']).sort(TABLES['provenance']))
             genes = pl.concat([seed_frame.select('organism_id','gene_name'), edges.select(pl.col('target_organism_id').alias('organism_id'),pl.col('target_gene_name').alias('gene_name'))]).unique()
+            seed_jobs=(('features',batch,org) for _,batch,org in _jobs(((s.organism_id,s.gene_name) for s in seeds),client.config.batch_size))
+            seed_features=_raw(client,cache,seed_jobs)
+            if seed_features is not None:
+                features=pl.concat([features,seed_features.rename(dict(zip(FEATURE_ATTRIBUTES,TABLES['features'])))]).unique()
             features = features.join(genes,on=['organism_id','gene_name'],how='semi')
+            writer.write('unmatched_genes',genes.join(features.select('organism_id','gene_name').unique(),on=['organism_id','gene_name'],how='anti'))
             writer.write('features',features.sort(TABLES['features']))
             writer.write('genes',genes.sort('organism_id','gene_name'))
             writer.write('organisms',features.select('organism_id','organism_name').unique().sort('organism_id'))
             return writer.finish(metadata_fingerprint=fingerprint, endpoint=client.config.endpoint, metrics=client.metrics)
     finally:
         if owned: client.close()
+
+def fetch_features(genes, *, output_dir, client=None, refresh=False):
+    """Retrieve transcript-grain features for organism-qualified genes."""
+    genes = sorted({(s.organism_id,s.gene_name) for s in
+                    (g if isinstance(g,Seed) else Seed(**g) for g in genes)})
+    if not genes:
+        raise ValidationError('At least one gene is required')
+    root=Path(output_dir); owned=client is None; client=client or BioMartClient()
+    try:
+        with _run_lock(root):
+            cache=RequestCache(root/'requests'); fingerprint=cache.metadata(client,refresh)
+            identity=digest({'genes':genes,'metadata':fingerprint,'endpoint':client.config.endpoint})
+            if not refresh:
+                try:
+                    previous=HomologDataset(root)
+                    if previous.manifest['identity']==identity: return previous
+                except __import__('phytominer.models',fromlist=['IncompleteDatasetError']).IncompleteDatasetError:
+                    pass
+            writer=DatasetWriter(root,identity)
+            jobs=(('features',batch,org) for _,batch,org in _jobs(genes,client.config.batch_size))
+            def execute(job): return cache.fetch(client,*job,refresh=refresh)
+            paths=[path for result in client.map(execute,jobs) for path in result]
+            features=pl.scan_parquet(paths).rename(dict(zip(FEATURE_ATTRIBUTES,TABLES['features']))) if paths else _empty(TABLES['features'])
+            wanted=pl.LazyFrame([{'organism_id':o,'gene_name':g} for o,g in genes])
+            features=features.join(wanted,on=['organism_id','gene_name'],how='semi').unique()
+            writer.write('genes',wanted)
+            writer.write('features',features.sort(TABLES['features']))
+            writer.write('organisms',features.select('organism_id','organism_name').unique().sort('organism_id'))
+            writer.write('unmatched_genes',wanted.join(features.select('organism_id','gene_name').unique(),on=['organism_id','gene_name'],how='anti'))
+            return writer.finish(metadata_fingerprint=fingerprint,metrics=client.metrics)
+    finally:
+        if owned: client.close()
+
+def join_annotations(dataset, annotation_file, *, organism_column='organism_id', gene_column='gene_name', has_header=True, column_names=None, output_dir=None):
+    """Left join unique organism/gene annotations; ambiguous keys are errors."""
+    path=Path(annotation_file)
+    if path.suffix=='.parquet':
+        annotation=pl.scan_parquet(path)
+    elif path.suffix in ('.csv','.tsv'):
+        if not has_header and not column_names:
+            raise ValidationError('Headerless input requires explicit column_names')
+        annotation=pl.scan_csv(path,separator='\t' if path.suffix=='.tsv' else ',',has_header=has_header,
+                               new_columns=column_names,infer_schema=False)
+    else:
+        raise ValidationError('Annotation format must be CSV, TSV or Parquet')
+    keys=['organism_id','gene_name']
+    annotation=annotation.rename({organism_column:'organism_id',gene_column:'gene_name'}).with_columns(pl.col(keys).cast(pl.String))
+    if annotation.filter(pl.any_horizontal(pl.col(keys).is_null() | (pl.col(keys)==' ' ) | (pl.col(keys)==''))).limit(1).collect().height:
+        raise ValidationError('Annotation keys must be nonempty')
+    if annotation.group_by(keys).len().filter(pl.col('len')>1).limit(1).collect().height:
+        raise ValidationError('Annotation organism/gene keys must be unique')
+    result=dataset.scan('genes').join(annotation.with_columns(pl.lit(True).alias('annotation_match')),on=keys,how='left',validate='m:1').with_columns(pl.col('annotation_match').fill_null(False))
+    if output_dir is None:
+        return result
+    root=Path(output_dir)
+    if root.resolve()==dataset.root.resolve():
+        raise ValidationError('Use a separate output directory for annotated datasets')
+    with _run_lock(root):
+        writer=DatasetWriter(root,digest({'parent':dataset.manifest['identity'],'annotation':__import__('phytominer.storage',fromlist=['checksum']).checksum(path)}))
+        for table in dataset.manifest['tables']: writer.write(table,dataset.scan(table))
+        writer.write('annotations',annotation)
+        writer.write('annotated_genes',result)
+        return writer.finish()

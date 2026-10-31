@@ -106,3 +106,12 @@ joins. Breadth-first traversal persists each level, tracks visited pairs per
 root and queries each pair once globally. Direct edges retain reported values;
 root discovery depth is separate. Acceptance: cycles, boundaries, multiple roots,
 query-once and depth tests plus cumulative suite PASS.
+
+## 4.3 Features and annotations
+Previous handshake: expansion commit (git log). GitHits polars@2.1.0
+src/polars/io/csv/functions.py:558-950 verifies explicit headers/schema handling;
+LazyFrame.join validate=m:1 evidence reused. Scoped feature API preserves every
+transcript; unmatched genes are explicit. CSV/TSV/Parquet annotations join on
+organism+gene with duplicate-key rejection and optional derived dataset output.
+Acceptance: transcript grain, organism-qualified annotation matching, unmatched
+flags, duplicate rejection and cumulative suite PASS.

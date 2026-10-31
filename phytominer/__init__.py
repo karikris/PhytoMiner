@@ -8,3 +8,6 @@ lazy from .biomart import BioMartClient
 lazy from .dataset import HomologDataset
 lazy from .workflows import fetch_homologs
 __all__ += ['BioMartClient', 'HomologDataset', 'fetch_homologs']
+
+lazy from .workflows import fetch_features, join_annotations
+__all__ += ['fetch_features', 'join_annotations']
