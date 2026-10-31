@@ -1,6 +1,7 @@
 """Versioned manifests over compact canonical Parquet tables."""
 
 import json
+import hashlib
 import os
 import uuid
 from copy import deepcopy
@@ -13,7 +14,9 @@ lazy import pyarrow as pa
 from .storage import atomic_json, checksum
 from .models import TABLES, TABLES_V1, IncompleteDatasetError, ValidationError
 
-DATASET_SCHEMA_VERSION = 2
+from .schemas import TABLES_V2, REQUIRED, NULLABLE, KEYS
+
+DATASET_SCHEMA_VERSION = 3
 
 
 def _validate_manifest(root, manifest):
@@ -25,7 +28,13 @@ def _validate_manifest(root, manifest):
             DATASET_SCHEMA_VERSION,
         ):
             raise ValueError("Incomplete or unsupported manifest")
-        schemas = TABLES_V1 if manifest["schema_version"] == 1 else TABLES
+        schemas = {1: TABLES_V1, 2: TABLES_V2}.get(manifest["schema_version"], TABLES)
+        if manifest["schema_version"] == 3:
+            kind = manifest.get("kind")
+            if kind not in REQUIRED or not REQUIRED[kind] <= manifest["tables"].keys():
+                raise ValueError(
+                    "Missing required dataset tables or unknown dataset kind"
+                )
         for name, record in manifest["tables"].items():
             path = (root / record["file"]).resolve()
             if (
@@ -50,6 +59,29 @@ def _validate_manifest(root, manifest):
                             raise ValueError("Invalid dataset column type")
                 if file.metadata.num_rows != record["rows"]:
                     raise ValueError("Invalid dataset row count")
+            if manifest["schema_version"] == 3:
+                keys = KEYS.get(name, ())
+                required_columns = [
+                    c for c in schemas.get(name, keys) if c not in NULLABLE
+                ]
+                columns = list(dict.fromkeys((*keys, *required_columns)))
+                seen = set()
+                with pq.ParquetFile(path) as checked:
+                    if not set(columns) <= set(checked.schema_arrow.names):
+                        raise ValueError("Missing dataset key")
+                    for batch in checked.iter_batches(batch_size=4096, columns=columns):
+                        for column in required_columns:
+                            if batch.column(column).null_count:
+                                raise ValueError("Null required dataset key or value")
+                        if keys:
+                            for row in batch.to_pylist():
+                                identity = hashlib.sha256(
+                                    json.dumps([row[k] for k in keys]).encode()
+                                ).digest()
+                                if identity in seen:
+                                    raise ValueError("Duplicate dataset keys")
+                                seen.add(identity)
+
     except (
         OSError,
         ValueError,
@@ -62,7 +94,7 @@ def _validate_manifest(root, manifest):
 
 
 class DatasetWriter:
-    def __init__(self, root, identity):
+    def __init__(self, root, identity, *, kind="collection"):
         self.root = Path(root)
         self.generation = uuid.uuid4().hex
         self.directory = self.root / "tables" / self.generation
@@ -71,6 +103,7 @@ class DatasetWriter:
 
         self.manifest = {
             "package_version": __version__,
+            "kind": kind,
             "schema_version": DATASET_SCHEMA_VERSION,
             "status": "incomplete",
             "identity": identity,

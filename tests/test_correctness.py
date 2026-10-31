@@ -180,7 +180,7 @@ def test_schema_two_deterministic_missing_evidence(tmp_path, workers):
     result = fetch_homologs([Seed('1','a','X'),Seed('1','a','Y'),Seed('2','b')],
         target_organisms=['org1','org2'], expansion_depth=3, output_dir=tmp_path,
         client=MissingFeatures({'org1'}, ClientConfig(max_workers=workers)))
-    assert result.manifest['schema_version'] == 2
+    assert result.manifest['schema_version'] == 3
     assert result.scan('relationships').collect().height == 2
     assert result.scan('provenance').collect().height == 3
     assert result.manifest['unresolved_identity_rows'] == 2

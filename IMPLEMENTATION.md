@@ -390,3 +390,7 @@ remain covered. No push; proceed to schema/provenance/run context work.
 ## 1.0.2 task 1.4
 Previous handshake: f60ae19. GitHits uv 0.11.19 resolution.md:263-270 verifies lowest-direct. Minimum suite passed all 96 tests; lockfile unchanged by isolated verification.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 1.0.2 task 2.1
+Previous handshake: 1e566cc. GitHits Arrow 26 metadata and iter_batches reviewed. Arrow-only validation retains SQL-without-Polars lazy boundaries; schema 1/2 remain readable.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.

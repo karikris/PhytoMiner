@@ -75,7 +75,7 @@ def fetch_homologs(
                         return result
                 except IncompleteDatasetError:
                     pass
-            writer = DatasetWriter(root, identity)
+            writer = DatasetWriter(root, identity, kind="homologs")
             seed_frame = pl.LazyFrame(
                 [asdict(s) for s in seed_records],
                 schema={c: pl.String for c in TABLES["seeds"]},
@@ -201,7 +201,7 @@ def fetch_features(
                         return previous
                 except IncompleteDatasetError:
                     pass
-            writer = DatasetWriter(root, identity)
+            writer = DatasetWriter(root, identity, kind="features")
             jobs = (
                 ("features", batch, org)
                 for _, batch, org in _jobs(gene_keys, client.config.batch_size)
