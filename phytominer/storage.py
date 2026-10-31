@@ -5,6 +5,8 @@ import json
 import os
 import tempfile
 import time
+import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 lazy import pyarrow as pa
 lazy import pyarrow.parquet as pq
@@ -74,6 +76,7 @@ class RequestCache:
             []
         )  # Fail before worker dispatch if the columnar runtime is unavailable.
         pq.ParquetWriter
+        self.used_paths = set()
         self.refresh = refresh
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
@@ -139,7 +142,7 @@ class RequestCache:
             try:
                 record = json.loads(manifest.read_text())
                 if self.valid(record, columns):
-                    return [self.root / p["file"] for p in record["parts"]]
+                    return self._used([self.root / p["file"] for p in record["parts"]])
             except ValueError, KeyError:
                 pass
         path = self.root / (key + ".parquet")
@@ -179,5 +182,18 @@ class RequestCache:
         except Exception:
             atomic_json(manifest, {"status": "failed", "query_hash": key})
             raise
-        atomic_json(manifest, {"status": "complete", "query_hash": key, "parts": parts})
-        return [self.root / part["file"] for part in parts]
+        atomic_json(
+            manifest,
+            {
+                "status": "complete",
+                "query_hash": key,
+                "parts": parts,
+                "event_id": uuid.uuid4().hex,
+                "retrieved_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
+        return self._used([self.root / part["file"] for part in parts])
+
+    def _used(self, paths):
+        self.used_paths.update(paths)
+        return paths

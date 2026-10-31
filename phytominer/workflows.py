@@ -2,6 +2,7 @@
 
 from dataclasses import asdict
 from pathlib import Path
+from .evidence import write_evidence
 from .contracts import Seeds, Targets
 lazy import polars as pl
 from .models import (
@@ -140,6 +141,7 @@ def fetch_homologs(
                     how="anti",
                 ),
             )
+            write_evidence(writer, cache, client, edges)
             edges = _resolution_status(edges, features)
             writer.write("relationships", edges.sort(TABLES["relationships"]))
             writer.write("features", features.sort(TABLES["features"]))
@@ -240,6 +242,7 @@ def fetch_features(
                     how="anti",
                 ),
             )
+            write_evidence(writer, cache, client)
             return writer.finish(
                 metadata_fingerprint=fingerprint, metrics=client.metrics
             )

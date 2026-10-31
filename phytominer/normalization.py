@@ -2,6 +2,8 @@
 
 lazy import polars as pl
 lazy import pyarrow.parquet as pq
+from .evidence import event_for
+
 from .models import (
     TABLES,
     RELATIONSHIP_COLUMNS,
@@ -26,7 +28,16 @@ def _raw(client, cache, jobs):
 
     for (page, genes, organism), result in client.map(execute, jobs):
         if page == "orthologs":
-            frame = pl.scan_parquet(sorted(set(result)))
+            frame = pl.concat(
+                [
+                    pl.scan_parquet(path).with_columns(
+                        pl.lit(event_for(path, client)["event_id"]).alias(
+                            "_retrieval_event_id"
+                        )
+                    )
+                    for path in sorted(set(result))
+                ]
+            )
             invalid = frame.filter(
                 pl.col("ortholog__dm_gene_name").is_null()
                 | ~pl.col("ortholog__dm_gene_name").is_in(genes)
@@ -60,7 +71,9 @@ def _jobs(keys, batch_size):
 
 def _resolve(client, cache, raw, scratch):
     if raw.limit(1).collect().is_empty():
-        return _empty(RELATIONSHIP_COLUMNS), _empty(TABLES["features"])
+        return _empty(RELATIONSHIP_COLUMNS + ("_retrieval_event_id",)), _empty(
+            TABLES["features"]
+        )
     source = raw.select(
         pl.col("ortholog__dm_gene_name").alias("gene_name"),
         pl.col("ortholog__dm_organism_name").alias("organism_name"),
@@ -142,7 +155,7 @@ def _resolve(client, cache, raw, scratch):
         raise ServiceError(
             "BioMart source feature identity conflicts with the requested organism"
         )
-    return edges.select(RELATIONSHIP_COLUMNS).unique(), features
+    return edges.select(*RELATIONSHIP_COLUMNS, "_retrieval_event_id").unique(), features
 
 
 def _resolution_status(edges, features):
@@ -165,4 +178,4 @@ def _resolution_status(edges, features):
             .otherwise(pl.lit("missing_feature"))
             .alias(f"{side}_resolution_status")
         ).drop(marker)
-    return edges.select(TABLES["relationships"])
+    return edges.select(TABLES["relationships"]).unique()

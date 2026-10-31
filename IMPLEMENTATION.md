@@ -398,3 +398,7 @@ Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake 
 ## 1.0.2 task 2.2
 Previous handshake: bb6f4d2. GitHits CPython 3.15.2 hashlib reviewed. Derived identity uses sorted content hashes and all import settings, not generation UUIDs or timestamps.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 1.0.2 task 2.3
+Previous handshake: b77c0fd. GitHits Polars 2.1.0 expression contracts reviewed; event metadata persists in raw manifests, legacy timestamps derive from immutable file metadata.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.

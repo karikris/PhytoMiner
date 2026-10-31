@@ -14,7 +14,7 @@ def _discover(
     visited = {root: {root} for root in roots}
     queried = set()
     edge_parts, feature_parts, provenance_parts = [], [], []
-    all_edges = _empty(RELATIONSHIP_COLUMNS)
+    all_edges = _empty(RELATIONSHIP_COLUMNS + ("_retrieval_event_id",))
     for depth in range(1, expansion_depth + 2):
         needed = set().union(*frontier.values()) - queried
         if needed:
@@ -22,7 +22,10 @@ def _discover(
             edges, features = (
                 resolver(client, cache, raw, scratch)
                 if raw is not None
-                else (_empty(RELATIONSHIP_COLUMNS), _empty(TABLES["features"]))
+                else (
+                    _empty(RELATIONSHIP_COLUMNS + ("_retrieval_event_id",)),
+                    _empty(TABLES["features"]),
+                )
             )
             sources = pl.LazyFrame(
                 [
