@@ -1,6 +1,6 @@
 """Versioned dataset kinds and scientific table grains."""
 
-from .evidence import EVENT_COLUMNS
+from . import evidence
 from .models import TABLES
 
 TABLES_V2 = {
@@ -44,7 +44,7 @@ NULLABLE = {
     "transcript_name",
     "pac_transcript_id",
 }
-assert EVENT_COLUMNS
+TABLES["retrieval_events"] = evidence.EVENT_COLUMNS
 KEYS = {name: columns for name, columns in TABLES.items()}
 KEYS["genes"] = ("organism_id", "gene_name")
 KEYS["organisms"] = ("organism_id",)

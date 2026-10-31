@@ -3,6 +3,7 @@
 from dataclasses import asdict
 from pathlib import Path
 from .evidence import write_evidence
+from .run import run_context
 from .contracts import Seeds, Targets
 lazy import polars as pl
 from .models import (
@@ -35,6 +36,7 @@ def fetch_homologs(
     output_dir: str | Path,
     client: BioMartClient | None = None,
     refresh: bool = False,
+    progress=None,
 ) -> HomologDataset:
     """Retrieve reported seed relationships; labels never multiply edge evidence."""
     seed_records = sorted(
@@ -56,9 +58,10 @@ def fetch_homologs(
     owned = client is None
     client = client or BioMartClient()
     try:
-        with _run_lock(root):
+        with _run_lock(root), run_context(root, client, progress) as run:
             cache = RequestCache(root / "requests", refresh=refresh)
-            fingerprint = cache.metadata(client, refresh)
+            with run.stage("metadata"):
+                fingerprint = cache.metadata(client, refresh)
             identity = _result_identity(
                 "homologs",
                 seeds=[asdict(s) for s in seed_records],
@@ -160,7 +163,8 @@ def fetch_homologs(
             return writer.finish(
                 metadata_fingerprint=fingerprint,
                 endpoint=client.config.endpoint,
-                metrics=client.metrics,
+                metrics=run.metrics(),
+                run_id=run.id,
                 unresolved_identity_rows=writer.manifest["tables"][
                     "unresolved_relationships"
                 ]["rows"],
@@ -176,6 +180,7 @@ def fetch_features(
     output_dir: str | Path,
     client: BioMartClient | None = None,
     refresh: bool = False,
+    progress=None,
 ) -> HomologDataset:
     """Retrieve transcript-grain features for organism-qualified genes."""
     gene_keys = sorted({(s.organism_id, s.gene_name) for s in normalize_seeds(genes)})
@@ -185,9 +190,10 @@ def fetch_features(
     owned = client is None
     client = client or BioMartClient()
     try:
-        with _run_lock(root):
+        with _run_lock(root), run_context(root, client, progress) as run:
             cache = RequestCache(root / "requests")
-            fingerprint = cache.metadata(client, refresh)
+            with run.stage("metadata"):
+                fingerprint = cache.metadata(client, refresh)
             identity = _result_identity(
                 "features",
                 genes=gene_keys,

@@ -128,6 +128,7 @@ class RequestCache:
         from .models import BatchSizeError, StreamError
 
         refresh = refresh or self.refresh
+        active_run = client.run
         xml, columns = client.build_query(page, genes, organism_id)
         key = digest(
             {
@@ -142,9 +143,13 @@ class RequestCache:
             try:
                 record = json.loads(manifest.read_text())
                 if self.valid(record, columns):
+                    if active_run is not None:
+                        active_run.counters["cache_hits"] += 1
                     return self._used([self.root / p["file"] for p in record["parts"]])
             except ValueError, KeyError:
                 pass
+        if active_run is not None:
+            active_run.counters["cache_misses"] += 1
         path = self.root / (key + ".parquet")
         result = {}
         try:

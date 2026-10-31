@@ -1,5 +1,6 @@
 """BioMart metadata and XML adapter. External field names stay in this module."""
 
+from typing import Any
 import hashlib
 import json
 import time
@@ -33,6 +34,7 @@ class BioMartClient:
         self._cooldown = 0.0
         self.effective_workers = self.config.max_workers
         self.metrics = []
+        self.run: Any = None
 
     def __enter__(self):
         return self
@@ -68,6 +70,8 @@ class BioMartClient:
                     self._condition.wait(max(0.001, delay) if delay > 0 else 0.05)
             started = time.monotonic()
             try:
+                if self.run is not None:
+                    self.run.counters["http_attempts"] += 1
                 response = self._session().request(
                     method,
                     self.config.endpoint,
