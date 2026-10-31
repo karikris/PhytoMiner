@@ -455,3 +455,7 @@ Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake 
 ## 1.0.2 task 6.2
 Previous handshake: d586ccf. GitHits Arrow 26 metadata interfaces reviewed. Full checksum/value verification stays default; metadata mode retains containment, schema and row-count checks.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 1.0.2 task 6.3
+Previous handshake: 0e7402b. GitHits CPython O_EXCL and path containment reviewed. Reader leases and maintenance guard protect cross-process pinned generations; cleanup is explicit, dry-run first and stale-plan checked. Phase 6 lifecycle gate covered.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.

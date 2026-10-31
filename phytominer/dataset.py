@@ -5,6 +5,7 @@ import hashlib
 import os
 import uuid
 from copy import deepcopy
+from .maintenance import maintenance_lock, reader_lease
 from pathlib import Path
 from datetime import datetime, timezone
 lazy import duckdb
@@ -161,24 +162,49 @@ class HomologDataset:
             raise ValidationError("verify must be full or metadata")
         self.verification_mode = verify
         self.root = Path(root)
-        try:
-            manifest = json.loads((self.root / "manifest.json").read_text())
-        except (OSError, ValueError) as exc:
-            raise IncompleteDatasetError(f"Cannot open dataset: {exc}") from exc
-        if verify == "full":
-            _validate_manifest(self.root, manifest)
-        else:
-            _validate_manifest(self.root, manifest, verify=verify)
-        self.manifest = deepcopy(manifest)
+        self._lease = None
+        with maintenance_lock(self.root):
+            try:
+                manifest = json.loads((self.root / "manifest.json").read_text())
+            except (OSError, ValueError) as exc:
+                raise IncompleteDatasetError(f"Cannot open dataset: {exc}") from exc
+            if verify == "full":
+                _validate_manifest(self.root, manifest)
+            else:
+                _validate_manifest(self.root, manifest, verify=verify)
+            self.manifest = deepcopy(manifest)
+            self._lease = reader_lease(self.root, self.manifest)
 
     @classmethod
     def _from_manifest(cls, root, manifest):
-        _validate_manifest(root, manifest)
         result = cls.__new__(cls)
-        result.verification_mode = "full"
+        result._lease = None
         result.root = Path(root)
-        result.manifest = deepcopy(manifest)
+        result.verification_mode = "full"
+        with maintenance_lock(result.root):
+            _validate_manifest(root, manifest)
+            result.manifest = deepcopy(manifest)
+            result._lease = reader_lease(result.root, result.manifest)
         return result
+
+    def close(self):
+        lease = getattr(self, "_lease", None)
+        if lease is not None:
+            with maintenance_lock(self.root):
+                lease.unlink(missing_ok=True)
+            self._lease = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
+
+    def __del__(self):
+        try:
+            self.close()
+        except Exception:
+            pass  # Unknown leases stay protected after a crash or busy maintenance.
 
     def scan(self, table):
         if table not in self.manifest["tables"]:

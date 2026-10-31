@@ -23,6 +23,8 @@ lazy from .models import (
 
 lazy from .limits import RunLimits, CancellationToken
 
+lazy from .maintenance import inspect_cache, plan_cleanup, execute_cleanup
+
 __all__ = [
     "ClientConfig",
     "Seed",
@@ -45,3 +47,5 @@ __all__ += [
 __all__ += ["RunLimits"]
 
 __all__ += ["CancellationToken"]
+
+__all__ += ["inspect_cache", "plan_cleanup", "execute_cleanup"]
