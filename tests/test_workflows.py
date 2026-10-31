@@ -78,3 +78,11 @@ def test_unresolved_targets_preserve_reported_evidence(tmp_path):
     assert edge['target_organism_name']=='org2' and edge['target_organism_id'] is None
     assert result.manifest['unresolved_identity_rows']==1
     assert result.scan('provenance').collect().height==1
+
+@pytest.mark.parametrize('workers',[1,2,4])
+def test_deterministic_workers(tmp_path,workers):
+    from phytominer import ClientConfig
+    result=fetch_homologs([Seed('1','a'),Seed('2','b')],target_organisms=['1','2'],expansion_depth=4,output_dir=tmp_path,client=FixtureClient(ClientConfig(max_workers=workers)))
+    edges=result.scan('relationships').collect()
+    assert edges['source_organism_id'].to_list()==['1','2']
+    assert result.scan('provenance').collect().height==4

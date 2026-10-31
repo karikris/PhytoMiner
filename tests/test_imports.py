@@ -39,3 +39,17 @@ import phytominer
 from phytominer import Seed
 assert Seed('1','a').gene_name == 'a'
 """,'-X','lazy_imports=all')
+
+def test_sql_does_not_load_polars(tmp_path):
+    from phytominer import fetch_homologs, Seed
+    from test_workflows import FixtureClient
+    fetch_homologs([Seed('1','a')],output_dir=tmp_path,client=FixtureClient())
+    run(f"""
+import sys
+from phytominer import HomologDataset
+x=HomologDataset({str(tmp_path)!r})
+assert 'polars' not in sys.modules and 'duckdb' not in sys.modules
+with x.connect() as c:
+    assert c.sql('select count(*) from relationships').fetchall()==[(1,)]
+assert 'duckdb' in sys.modules and 'polars' not in sys.modules
+""")

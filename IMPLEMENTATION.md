@@ -177,3 +177,16 @@ Polars 2.1 scan/sink APIs rechecked. Added migration guide and executable exampl
 with fixture injection. Docs explicitly describe unresolved IDs, traversal depth,
 cache refresh, lock recovery and conservative concurrency. Acceptance: executable
 example and cumulative suite PASS; no live access in ordinary tests.
+
+## 6.2 Installation and performance
+Previous handshake: 946fa70. GitHits Arrow@26.0.0
+pyarrow/parquet/core.py:540-603 verifies bounded iter_batches; Polars 2.1
+group aggregation and DuckDB 2.0 relation APIs checked. Added isolated wheel
+installation and million-row benchmark to each platform CI job. Deterministic
+worker tests and SQL-without-Polars import tests PASS. Local cumulative suite: 44
+tests. Benchmark removed a redundant full-edge deduplication from summaries
+because canonical relationship tables are already deduplicated at ingestion.
+One million synthetic rows: 0.205s, 442046-byte Parquet, 619737088-byte peak process
+RSS, matching SQL/Polars counts, zero network. These are measurements on this
+machine and repetitive data, not memory/throughput guarantees. See validation.json
+for small workload and import comparison. Installed-wheel smoke test PASS.

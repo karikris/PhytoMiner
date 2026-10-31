@@ -62,7 +62,7 @@ class HomologDataset:
 
     def summary(self):
         """Count reported edges and distinct genes without label/transcript fanout."""
-        return self.scan('relationships').unique().group_by(
+        return self.scan('relationships').group_by(
             'target_organism_id','target_organism_name','relationship').agg(
                 pl.col('target_gene_name').n_unique().alias('homolog_genes'),
                 pl.struct('source_organism_id','source_gene_name').n_unique().alias('query_genes'),
