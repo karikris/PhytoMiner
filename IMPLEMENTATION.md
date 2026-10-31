@@ -297,3 +297,11 @@ same-filesystem atomicity checked. Writer initialization and table checkpoints
 write only generation-private manifests. Tests verify previous public manifest
 bytes and readers remain unchanged; first incomplete run stays unpublished.
 Targeted/cumulative tests and diff checks PASS; commit handshake PASS.
+
+## Task 3.2 — Validated publication
+Previous handshake: e0713e1. GitHits CPython v3.15.2 os.replace and prior Arrow
+26 ParquetFile metadata evidence used. Shared validation checks complete status,
+paths, checksums, column names/types and row counts before root publication.
+Candidate manifest is private first, then root switches atomically; returned
+handle is pinned to the validated generation. Invalid candidates and injected
+root-write failure preserve prior publication. Cumulative tests/diff checks PASS.

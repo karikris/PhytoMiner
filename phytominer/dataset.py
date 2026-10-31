@@ -2,15 +2,43 @@
 import json
 import os
 import uuid
+from copy import deepcopy
 from pathlib import Path
 from datetime import datetime, timezone
 lazy import duckdb
 lazy import polars as pl
 lazy import pyarrow.parquet as pq
+lazy import pyarrow as pa
 from .storage import atomic_json, checksum
 from .models import TABLES, TABLES_V1, IncompleteDatasetError, ValidationError
 
 DATASET_SCHEMA_VERSION = 2
+
+def _validate_manifest(root, manifest):
+    """Validate an unpublished candidate or an existing published generation."""
+    root = Path(root)
+    try:
+        if manifest['status'] != 'complete' or manifest['schema_version'] not in (1, DATASET_SCHEMA_VERSION):
+            raise ValueError('Incomplete or unsupported manifest')
+        schemas = TABLES_V1 if manifest['schema_version'] == 1 else TABLES
+        for name, record in manifest['tables'].items():
+            path = (root / record['file']).resolve()
+            if not path.is_relative_to(root.resolve()) or checksum(path) != record['sha256']:
+                raise ValueError('Invalid dataset file')
+            with pq.ParquetFile(path) as file:
+                if name in schemas:
+                    if file.schema_arrow.names != list(schemas[name]):
+                        raise ValueError('Invalid dataset table schema')
+                    for field in file.schema_arrow:
+                        valid_type = pa.types.is_int64(field.type) if field.name == 'depth' else (
+                            pa.types.is_string(field.type) or pa.types.is_large_string(field.type))
+                        if not valid_type:
+                            raise ValueError('Invalid dataset column type')
+                if file.metadata.num_rows != record['rows']:
+                    raise ValueError('Invalid dataset row count')
+    except (OSError, ValueError, KeyError, TypeError, AttributeError, pa.ArrowException) as exc:
+        raise IncompleteDatasetError(f'Cannot open dataset: {exc}') from exc
+
 
 class DatasetWriter:
     def __init__(self, root, identity):
@@ -39,29 +67,30 @@ class DatasetWriter:
         atomic_json(self.directory / 'manifest.json', self.manifest)
 
     def finish(self, **details):
-        self.manifest.update(details, status='complete')
-        atomic_json(self.root / 'manifest.json', self.manifest)
-        return HomologDataset(self.root)
+        candidate = {**self.manifest, **details, 'status': 'complete'}
+        pinned = HomologDataset._from_manifest(self.root, candidate)
+        atomic_json(self.directory / 'manifest.json', pinned.manifest)
+        atomic_json(self.root / 'manifest.json', pinned.manifest)
+        self.manifest = deepcopy(pinned.manifest)
+        return pinned
 
 class HomologDataset:
     def __init__(self, root):
         self.root = Path(root)
         try:
-            self.manifest = json.loads((self.root / 'manifest.json').read_text())
-            if self.manifest['status'] != 'complete' or self.manifest['schema_version'] not in (1, DATASET_SCHEMA_VERSION):
-                raise ValueError('Incomplete or unsupported manifest')
-            schemas = TABLES_V1 if self.manifest['schema_version'] == 1 else TABLES
-            for name, record in self.manifest['tables'].items():
-                path = (self.root / record['file']).resolve()
-                if not path.is_relative_to(self.root.resolve()) or checksum(path) != record['sha256']:
-                    raise ValueError('Invalid dataset file')
-                file = pq.ParquetFile(path)
-                if name in schemas and file.schema_arrow.names != list(schemas[name]):
-                    raise ValueError('Invalid dataset table schema')
-                if file.metadata.num_rows != record['rows']:
-                    raise ValueError('Invalid dataset row count')
-        except (OSError, ValueError, KeyError) as exc:
+            manifest = json.loads((self.root / 'manifest.json').read_text())
+        except (OSError, ValueError) as exc:
             raise IncompleteDatasetError(f'Cannot open dataset: {exc}') from exc
+        _validate_manifest(self.root, manifest)
+        self.manifest = deepcopy(manifest)
+
+    @classmethod
+    def _from_manifest(cls, root, manifest):
+        _validate_manifest(root, manifest)
+        result = cls.__new__(cls)
+        result.root = Path(root)
+        result.manifest = deepcopy(manifest)
+        return result
 
     def scan(self, table):
         if table not in self.manifest['tables']:
