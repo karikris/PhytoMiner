@@ -305,3 +305,15 @@ paths, checksums, column names/types and row counts before root publication.
 Candidate manifest is private first, then root switches atomically; returned
 handle is pinned to the validated generation. Invalid candidates and injected
 root-write failure preserve prior publication. Cumulative tests/diff checks PASS.
+
+## Task 3.3 — Failure injection and readers
+Previous handshake: 39795b5. GitHits pytest@9.2.0 monkeypatch contracts used to
+inject partial writes, corrupt first publication, actual atomic replace failure,
+and failures in homolog/feature/annotation workflows. Previous manifest bytes,
+pinned handles, new readers, lock release and resumable raw files verified.
+Cumulative suite/diff checks PASS; task commit/clean-tree handshake PASS.
+
+## Phase 3 handshake
+Every task PASS: first runs stay unpublished until valid, replacements preserve
+the prior generation on failure, success switches the root manifest atomically.
+No push; proceed to combined regressions and release verification.
