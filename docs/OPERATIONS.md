@@ -1,4 +1,4 @@
-# PhytoMiner 1.0.2 operational contracts
+# PhytoMiner 0.3.0 operational contracts
 
 Python 3.15 and explicit lazy imports remain required. Schema 3 adds dataset kinds,
 retrieval events, relationship evidence and seed outcomes. Schemas 1 and 2 remain

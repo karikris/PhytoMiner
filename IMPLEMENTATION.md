@@ -194,7 +194,7 @@ for small workload and import comparison. Installed-wheel smoke test PASS.
 ## 6.3 Release audit and preparation
 Previous handshake: dcc2d6d. GitHits CPython v3.15.2
 Doc/library/zipfile.rst:309-311,437-441 verifies distribution inspection APIs.
-Prepared 1.0.0 with a single version source, Python 3.15.2 development pin, SPDX
+Prepared 0.3.0 with a single version source, Python 3.15.2 development pin, SPDX
 license metadata and no publication workflow. Clean builds exclude every removed
 module. Audits inspect runtime source, wheel, sdist and dependency declarations.
 Final review tightened integer/finite configuration checks, query identity,
@@ -230,7 +230,7 @@ reported in the completion message, avoiding a self-referential commit hash.
 | 6.2 Performance/install | dcc2d6d |
 | 6.3 Final audit | Final completion SHA |
 
-# 1.0.1 correctness work
+# 0.3.0 correctness work
 
 Stay on main; commit each task after tests/diff checks. Push once after four
 local phase handshakes, then require exact-SHA CI before issue publication.
@@ -325,13 +325,13 @@ source evidence, failed refresh and raw-only rebuild in one directory verified;
 old handles stay pinned. Candidate-validation failure during refresh also leaves
 the old root manifest unchanged. Targeted/cumulative suite and diff checks PASS.
 
-## Task 4.2 — Release 1.0.1
+## Task 4.2 — Release 0.3.0
 Previous handshake: da876d9. GitHits CPython v3.15.2 email.parser.rst:265-275
 verifies package metadata parsing. Release audit checks dynamic version agreement
-rather than hard-coding 1.0.0. Single version source is now 1.0.1. Changelog and
+rather than hard-coding a release number. Single version source is now 0.3.0. Changelog and
 migration notes document target semantics, processing contract 2, schema 2,
 schema-1 reads and atomic generation publication.
-Acceptance PASS: 94 tests; clean wheel/sdist build; isolated 1.0.1 wheel install;
+Acceptance PASS: 94 tests; clean wheel/sdist build; isolated 0.3.0 wheel install;
 legacy-removal audit; million-row SQL/Polars parity; fresh-process lazy imports.
 Million-row local run: 0.174s, 452470 Parquet bytes, 621748224 peak RSS bytes.
 Import harness median: lazy import 0.000201s, first use 0.352530s; eager import
@@ -370,109 +370,109 @@ issues. Final SHA, CI URL and issue URLs are recorded in the completion report.
 | 4.2 Release preparation | 37b79e0 |
 | 4.3 Backlog preparation | Final completion SHA |
 
-## 1.0.2 task 1.1
+## 0.3.0 task 1.1
 Previous handshake: 1673b22. GitHits Polars 2.1.0 lazy-frame contracts reviewed. Public facade and monkeypatch seams preserved.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task 1.2
+## 0.3.0 task 1.2
 Previous handshake: 6a64c6d. GitHits CPython 3.15.2 typing Protocol reviewed; deferred annotations preserve lightweight imports.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task 1.3
+## 0.3.0 task 1.3
 Previous handshake: b551cb1. GitHits Ruff 0.17.3 lazy import rules verified. Ruff and Pyright 1.1.414 pass; regression suite caught and corrected an accidental seed table rename before commit.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 Phase 1 gate
+## 0.3.0 Phase 1 gate
 All four tasks PASS. Locked and lowest-direct dependency suites both pass on
 CPython 3.15.2; Ruff and Pyright pass. Lazy imports and scientific regressions
 remain covered. No push; proceed to schema/provenance/run context work.
 
-## 1.0.2 task 1.4
+## 0.3.0 task 1.4
 Previous handshake: f60ae19. GitHits uv 0.11.19 resolution.md:263-270 verifies lowest-direct. Minimum suite passed all 96 tests; lockfile unchanged by isolated verification.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task 2.1
+## 0.3.0 task 2.1
 Previous handshake: 1e566cc. GitHits Arrow 26 metadata and iter_batches reviewed. Arrow-only validation retains SQL-without-Polars lazy boundaries; schema 1/2 remain readable.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task 2.2
+## 0.3.0 task 2.2
 Previous handshake: bb6f4d2. GitHits CPython 3.15.2 hashlib reviewed. Derived identity uses sorted content hashes and all import settings, not generation UUIDs or timestamps.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task 2.3
+## 0.3.0 task 2.3
 Previous handshake: b77c0fd. GitHits Polars 2.1.0 expression contracts reviewed; event metadata persists in raw manifests, legacy timestamps derive from immutable file metadata.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task 2.4
+## 0.3.0 task 2.4
 Previous handshake: a781662. GitHits CPython 3.15.2 timing and context managers reviewed. Counters and request slices are per invocation; stopped diagnostics remain private.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 Phase 2 gate
+## 0.3.0 Phase 2 gate
 Schema/identity/provenance/run diagnostics suites PASS; no push.
 
-## 1.0.2 task 3.1
+## 0.3.0 task 3.1
 Previous handshake: 9a1d4de. GitHits ElementTree contracts reviewed. Canonical IDs/names/display labels resolve via unambiguous configuration options; fixtures are offline.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task 3.2
+## 0.3.0 task 3.2
 Previous handshake: 654ae15. GitHits Arrow 26 iter_batches reviewed. Resolution index keys include endpoint dataset metadata/version; parts are checksum/schema validated and refreshed explicitly.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task 3.3
+## 0.3.0 task 3.3
 Previous handshake: 6550018. GitHits Polars 2.1.0 expressions reviewed. Outcomes are unique per seed; refresh is explicit when feature evidence changes. Phase 3 catalog/cache/outcomes integration passes.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task 4.1
+## 0.3.0 task 4.1
 Previous handshake: b764cac. GitHits CPython monotonic timing reviewed. Budget reservations count real HTTP attempts and preserve previous publications; controls default to unlimited.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task 4.2
+## 0.3.0 task 4.2
 Previous handshake: fad1e4b. GitHits requests 2.34.2 timeout/stream contracts reviewed. Interruptible waits and stream checkpoints preserve raw cache and previous publications.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 Phase 3 gate
+## 0.3.0 Phase 3 gate
 Catalog, reusable identity mappings and unique seed outcomes PASS; no push.
 
-## 1.0.2 task 4.3
+## 0.3.0 task 4.3
 Previous handshake: ffd9c94. GitHits CPython weak references and conditions reviewed. Most restrictive live-client settings coordinate per process, while sessions and separate endpoints stay independent. Phase 4 gates include limits and cancellation.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 Phase 4 gate
+## 0.3.0 Phase 4 gate
 Local-server shared limits/cooldown and cancellation/budget publication tests PASS.
 
-## 1.0.2 task 5.1
+## 0.3.0 task 5.1
 Previous handshake: d717cf7. GitHits JSON and atomic replacement reviewed. Plain JSON state links checksummed Parquet artifacts, excludes budgets from scientific identity, and supports larger budgets on resume. Processing contract is now 3.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task 5.2
+## 0.3.0 task 5.2
 Previous handshake: f21a567. GitHits Polars 2.1.0 lazy filtering reviewed. Catalog-backed local prefilter avoids unverified remote restrictions; final target correctness filter remains. Phase 5 interruption/resume and equivalence gate covered.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task 6.1
+## 0.3.0 task 6.1
 Previous handshake: 019d6f3. GitHits Polars 2.1.0 CSV schema and string trimming reviewed. Reserved columns, mapping collisions, string identifiers and post-trim duplicates are checked before joins.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task 6.2
+## 0.3.0 task 6.2
 Previous handshake: d586ccf. GitHits Arrow 26 metadata interfaces reviewed. Full checksum/value verification stays default; metadata mode retains containment, schema and row-count checks.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task 6.3
+## 0.3.0 task 6.3
 Previous handshake: 0e7402b. GitHits CPython O_EXCL and path containment reviewed. Reader leases and maintenance guard protect cross-process pinned generations; cleanup is explicit, dry-run first and stale-plan checked. Phase 6 lifecycle gate covered.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task 7.1
+## 0.3.0 task 7.1
 Previous handshake: c958b65. GitHits Hypothesis 6.170.14 settings verified. Reproducible generated graphs cover cycles roots missing features and reference traversal; cross-process reader pinning is exercised.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task 7.2
+## 0.3.0 task 7.2
 Previous handshake: 2d12189. GitHits Polars 2.1.0 scan/sink APIs rechecked. Example fixtures now assert exact Arabidopsis-to-Sorghum evidence, meaningful SQL counts and offline behavior.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task 7.3
+## 0.3.0 task 7.3
 Previous handshake: 5aa80f3. GitHits DuckDB 2.0 relations and Arrow/Polars APIs rechecked. Offline pipeline parses real TSV fixtures and reports isolated stages, queries, opening cost and zero-network resume.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 final local phase gate
+## 0.3.0 final local phase gate
 All seven phases PASS. Locked and minimum-direct suites: 124 tests. Ruff and
 Pyright pass. Built/installed wheel, py.typed marker and legacy audits pass.
 Million-row low/high scenarios and full XML pipeline (including missing features,
@@ -481,13 +481,25 @@ catalog maps 472 entries, TAIR10=167 and Sorghum v3.1.1=454. Final precommit
 review centralized all schema declarations so fresh-process validation is complete
 and fixed a checkpoint initialization error caught by the large benchmark.
 The final task also includes stream cancellation, private seed diagnostics and
-annotation schema regressions. See docs/ACCEPTANCE_1.0.2.md for the 23-task map.
+annotation schema regressions. See docs/ACCEPTANCE_0.3.0.md for the 23-task map.
 One push follows; close issues only after exact-SHA CI passes every job.
 
-## 1.0.2 task 7.4
+## 0.3.0 task 7.4
 Previous handshake: aa4aaa9. GitHits Polars 2.1.0 sink/expression contracts reviewed. Low/high cardinality million-row checks, varied graph transcripts/missing features, minimum dependencies and operational acceptance map complete.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
 
-## 1.0.2 task corrective
+## 0.3.0 task corrective
 Previous handshake: 2746b54. Windows exact-SHA CI caught an arrival-time assertion invalid under network/thread jitter. Record actual scheduler reservations and assert their spacing; preserve local-server concurrency checks. GitHits monotonic clock contracts reviewed.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 0.3.0 release numbering
+
+Consolidated the unpublished development milestones into the requested 0.3.0
+release. Updated the version source, migration/changelog, validation artifacts,
+acceptance links and backlog records. Removed obsolete higher-version local
+distributions. No remote release or tag above 0.3.0 exists. Dependency and dataset
+schema versions retain their independent meanings.
+
+Task handshake PASS: 124 tests, Ruff formatting/lint, Pyright, source/wheel build,
+isolated 0.3.0 wheel installation and legacy-removal audit passed. Updated release
+documents contain no higher PhytoMiner release numbers.

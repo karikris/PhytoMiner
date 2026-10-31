@@ -24,7 +24,7 @@
         "bug"
       ],
       "priority": "P1",
-      "body": "<!-- phytominer-backlog:B02 -->\n\nPriority: **P1**\n\n### Problem\n\nFeature-dependent normalization previously discarded reported source relationships.\n\n### Scope\n\nCarry source identity from XML request context; preserve missing feature evidence without inventing target IDs.\n\n### Acceptance criteria\n\n- [ ] Missing source, target and both-side features retain reported rows.\n- [ ] Request source IDs remain populated; conflicting evidence fails.\n- [ ] Root provenance and unresolved diagnostics are verified.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nFully addressed by the 1.0.1 correctness work; close after exact-SHA CI and acceptance verification.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/workflows.py)\n\nVerified release CI: {{ci_url}}\n\nFix commits: [b583b28](https://github.com/karikris/PhytoMiner/commit/b583b28), [e111ad4](https://github.com/karikris/PhytoMiner/commit/e111ad4), [4690de0](https://github.com/karikris/PhytoMiner/commit/4690de0)\nRegression evidence: `tests/test_correctness.py`; all acceptance criteria must be verified before closure.\n",
+      "body": "<!-- phytominer-backlog:B02 -->\n\nPriority: **P1**\n\n### Problem\n\nFeature-dependent normalization previously discarded reported source relationships.\n\n### Scope\n\nCarry source identity from XML request context; preserve missing feature evidence without inventing target IDs.\n\n### Acceptance criteria\n\n- [ ] Missing source, target and both-side features retain reported rows.\n- [ ] Request source IDs remain populated; conflicting evidence fails.\n- [ ] Root provenance and unresolved diagnostics are verified.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nFully addressed by the 0.3.0 correctness work; close after exact-SHA CI and acceptance verification.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/workflows.py)\n\nVerified release CI: {{ci_url}}\n\nFix commits: [b583b28](https://github.com/karikris/PhytoMiner/commit/b583b28), [e111ad4](https://github.com/karikris/PhytoMiner/commit/e111ad4), [4690de0](https://github.com/karikris/PhytoMiner/commit/4690de0)\nRegression evidence: `tests/test_correctness.py`; all acceptance criteria must be verified before closure.\n",
       "dependencies": [],
       "close_after_verified": true,
       "acceptance": [
@@ -146,7 +146,7 @@
         "enhancement"
       ],
       "priority": "P1",
-      "body": "<!-- phytominer-backlog:B09 -->\n\nPriority: **P1**\n\n### Problem\n\nField renaming based on schema position is fragile when internal context columns are added.\n\n### Scope\n\nMap documented BioMart attribute names to internal field names explicitly.\n\n### Acceptance criteria\n\n- [ ] Ortholog normalization is independent of raw column order.\n- [ ] Extra request-context columns cannot shift mappings.\n- [ ] Source identity regression tests pass.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nFully addressed by the 1.0.1 correctness work; close after exact-SHA CI and acceptance verification.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/workflows.py)\n\nVerified release CI: {{ci_url}}\n\nFix commits: [b583b28](https://github.com/karikris/PhytoMiner/commit/b583b28)\nRegression evidence: `tests/test_correctness.py`; all acceptance criteria must be verified before closure.\n",
+      "body": "<!-- phytominer-backlog:B09 -->\n\nPriority: **P1**\n\n### Problem\n\nField renaming based on schema position is fragile when internal context columns are added.\n\n### Scope\n\nMap documented BioMart attribute names to internal field names explicitly.\n\n### Acceptance criteria\n\n- [ ] Ortholog normalization is independent of raw column order.\n- [ ] Extra request-context columns cannot shift mappings.\n- [ ] Source identity regression tests pass.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nFully addressed by the 0.3.0 correctness work; close after exact-SHA CI and acceptance verification.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/workflows.py)\n\nVerified release CI: {{ci_url}}\n\nFix commits: [b583b28](https://github.com/karikris/PhytoMiner/commit/b583b28)\nRegression evidence: `tests/test_correctness.py`; all acceptance criteria must be verified before closure.\n",
       "dependencies": [],
       "close_after_verified": true,
       "acceptance": [
@@ -180,7 +180,7 @@
         "bug"
       ],
       "priority": "P1",
-      "body": "<!-- phytominer-backlog:B11 -->\n\nPriority: **P1**\n\n### Problem\n\nCompatible raw XML can require corrected processing after normalization changes.\n\n### Scope\n\nVersion processed-result identities separately from raw request format and dataset schema.\n\n### Acceptance criteria\n\n- [ ] Old processed results cannot satisfy a newer processing contract.\n- [ ] Validated compatible raw requests are reused.\n- [ ] Equivalent scientific selections retain deterministic identity.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nFully addressed by the 1.0.1 correctness work; close after exact-SHA CI and acceptance verification.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/workflows.py)\n\nVerified release CI: {{ci_url}}\n\nFix commits: [6de7d5a](https://github.com/karikris/PhytoMiner/commit/6de7d5a)\nRegression evidence: `tests/test_correctness.py`; all acceptance criteria must be verified before closure.\n",
+      "body": "<!-- phytominer-backlog:B11 -->\n\nPriority: **P1**\n\n### Problem\n\nCompatible raw XML can require corrected processing after normalization changes.\n\n### Scope\n\nVersion processed-result identities separately from raw request format and dataset schema.\n\n### Acceptance criteria\n\n- [ ] Old processed results cannot satisfy a newer processing contract.\n- [ ] Validated compatible raw requests are reused.\n- [ ] Equivalent scientific selections retain deterministic identity.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nFully addressed by the 0.3.0 correctness work; close after exact-SHA CI and acceptance verification.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/workflows.py)\n\nVerified release CI: {{ci_url}}\n\nFix commits: [6de7d5a](https://github.com/karikris/PhytoMiner/commit/6de7d5a)\nRegression evidence: `tests/test_correctness.py`; all acceptance criteria must be verified before closure.\n",
       "dependencies": [],
       "close_after_verified": true,
       "acceptance": [
@@ -449,7 +449,7 @@
     }
   ],
   "tracker": {
-    "title": "PhytoMiner improvement backlog after 1.0.1 correctness fixes",
+    "title": "PhytoMiner improvement backlog after 0.3.0 correctness fixes",
     "labels": [
       "enhancement"
     ],

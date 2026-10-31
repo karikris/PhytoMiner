@@ -1,4 +1,4 @@
-# 1.0.2 acceptance map
+# 0.3.0 acceptance map
 
 All tasks have local acceptance evidence. Close issues only after exact-SHA remote CI succeeds.
 
@@ -34,4 +34,4 @@ limits and cancellation; phase 5 validated resume/filter equivalence; phase 6
 annotation and cross-process lease cleanup; phase 7 generated invariants, meaningful
 examples and low/high-cardinality full-pipeline benchmarks.
 
-See VALIDATION_1.0.2.json and OPERATIONS.md for measured results and behavioral limits.
+See VALIDATION_0.3.0.json and OPERATIONS.md for measured results and behavioral limits.
