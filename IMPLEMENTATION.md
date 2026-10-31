@@ -381,3 +381,12 @@ Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake 
 ## 1.0.2 task 1.3
 Previous handshake: b551cb1. GitHits Ruff 0.17.3 lazy import rules verified. Ruff and Pyright 1.1.414 pass; regression suite caught and corrected an accidental seed table rename before commit.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 1.0.2 Phase 1 gate
+All four tasks PASS. Locked and lowest-direct dependency suites both pass on
+CPython 3.15.2; Ruff and Pyright pass. Lazy imports and scientific regressions
+remain covered. No push; proceed to schema/provenance/run context work.
+
+## 1.0.2 task 1.4
+Previous handshake: f60ae19. GitHits uv 0.11.19 resolution.md:263-270 verifies lowest-direct. Minimum suite passed all 96 tests; lockfile unchanged by isolated verification.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
