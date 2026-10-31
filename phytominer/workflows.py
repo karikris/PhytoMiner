@@ -114,6 +114,20 @@ def _discover(client, cache, seeds, targets, expansion_depth, scratch):
     return (all_edges, pl.scan_parquet(feature_parts).unique() if feature_parts else _empty(TABLES['features']),
             pl.scan_parquet(provenance_parts).unique() if provenance_parts else _empty(TABLES['provenance']))
 
+def _normalize_targets(targets):
+    if targets is None:
+        return None
+    if isinstance(targets, (str, bytes)):
+        raise ValidationError('Target organisms must be an iterable of nonempty strings')
+    try:
+        values = tuple(targets)
+    except TypeError as exc:
+        raise ValidationError('Target organisms must be an iterable of nonempty strings') from exc
+    if any(not isinstance(value, str) or not value.strip() or value != value.strip() for value in values):
+        raise ValidationError('Target organisms must be nonempty, trimmed strings')
+    return tuple(sorted(set(values)))
+
+
 def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_dir, client=None, refresh=False):
     """Retrieve reported seed relationships; labels never multiply edge evidence."""
     seeds = sorted(set(seed if isinstance(seed, Seed) else Seed(**seed) for seed in seeds),
@@ -122,8 +136,7 @@ def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_di
         raise ValidationError('At least one seed is required')
     if not isinstance(expansion_depth, int) or isinstance(expansion_depth, bool) or expansion_depth < 0:
         raise ValidationError('Expansion depth must be a nonnegative integer')
-    if target_organisms is not None and (isinstance(target_organisms,str) or any(not isinstance(v,str) or not v.strip() for v in target_organisms)):
-        raise ValidationError('Target organisms must be a list of nonempty strings')
+    target_organisms = _normalize_targets(target_organisms)
     if expansion_depth and not target_organisms:
         raise ValidationError('Expansion requires an explicit organism boundary')
     root = Path(output_dir)
@@ -145,7 +158,10 @@ def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_di
             writer = DatasetWriter(root, identity)
             seed_frame = pl.LazyFrame([asdict(s) for s in seeds], schema={c:pl.String for c in TABLES['seeds']})
             writer.write('seeds', seed_frame)
-            edges, features, provenance = _discover(client, cache, seeds, target_organisms, expansion_depth, writer.directory)
+            if target_organisms == ():
+                edges, features, provenance = (_empty(TABLES[name]) for name in ('relationships', 'features', 'provenance'))
+            else:
+                edges, features, provenance = _discover(client, cache, seeds, target_organisms, expansion_depth, writer.directory)
             writer.write('relationships',edges.sort(TABLES['relationships']))
             writer.write('provenance',provenance.select(TABLES['provenance']).sort(TABLES['provenance']))
             genes = pl.concat([seed_frame.select('organism_id','gene_name'), edges.select(pl.col('target_organism_id').alias('organism_id'),pl.col('target_gene_name').alias('gene_name'))]).filter(pl.col('organism_id').is_not_null()).unique()

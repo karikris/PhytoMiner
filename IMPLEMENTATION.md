@@ -229,3 +229,15 @@ reported in the completion message, avoiding a self-referential commit hash.
 | 6.1 Examples/docs | 946fa70 |
 | 6.2 Performance/install | dcc2d6d |
 | 6.3 Final audit | Final completion SHA |
+
+# 1.0.1 correctness work
+
+Stay on main; commit each task after tests/diff checks. Push once after four
+local phase handshakes, then require exact-SHA CI before issue publication.
+
+## Task 1.1 — Target selection
+Base: 32c177a. GitHits CPython v3.15.2 Doc/builtins/stdtypes.rst:1754-1764
+verifies tuple(iterable) materializes iterators. Normalize once; None and empty
+selection stay distinct, selections sort/deduplicate, empty selection skips
+ortholog requests. Targeted regressions and cumulative suite PASS; clean-tree
+commit handshake required before 1.2.
