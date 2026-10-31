@@ -34,7 +34,17 @@ class RunContext:
             "bytes": 0,
             "rows": 0,
         }
-        self.timings = {}
+        self.timings = {
+            name: 0.0
+            for name in (
+                "metadata",
+                "fetch",
+                "resolution",
+                "traversal",
+                "persist",
+                "publication",
+            )
+        }
         self.outcomes = []
         self.status = "running"
         self.reason: str | None = None
@@ -110,6 +120,9 @@ class RunContext:
             self.emit("stage_finished", stage=name)
 
     def metrics(self):
+        records = list(self.client.metrics[self.offset :])
+        self.counters["bytes"] = sum(r.get("response_bytes", 0) for r in records)
+        self.counters["rows"] = sum(r.get("rows", 0) for r in records)
         return {
             "run_id": self.id,
             **self.counters,

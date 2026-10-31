@@ -19,7 +19,7 @@ def _empty(columns):
     )
 
 
-def _raw(client, cache, jobs):
+def _fetch_batches(client, cache, jobs):
     paths, contextual_frames = [], []
 
     def execute(job):
@@ -69,7 +69,7 @@ def _jobs(keys, batch_size):
             yield "orthologs", genes[start : start + batch_size], organism
 
 
-def _resolve(client, cache, raw, scratch):
+def _resolve_impl(client, cache, raw, scratch):
     if raw.limit(1).collect().is_empty():
         return _empty(RELATIONSHIP_COLUMNS + ("_retrieval_event_id",)), _empty(
             TABLES["features"]
@@ -192,3 +192,17 @@ def _resolution_status(edges, features):
             .alias(f"{side}_resolution_status")
         ).drop(marker)
     return edges.select(TABLES["relationships"]).unique()
+
+
+def _raw(client, cache, jobs):
+    if client.run is None:
+        return _fetch_batches(client, cache, jobs)
+    with client.run.stage("fetch"):
+        return _fetch_batches(client, cache, jobs)
+
+
+def _resolve(client, cache, raw, scratch):
+    if client.run is None:
+        return _resolve_impl(client, cache, raw, scratch)
+    with client.run.stage("resolution"):
+        return _resolve_impl(client, cache, raw, scratch)

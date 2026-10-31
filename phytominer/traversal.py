@@ -7,7 +7,7 @@ from .models import TABLES, RELATIONSHIP_COLUMNS
 from .normalization import _empty, _jobs
 
 
-def _discover(
+def _discover_impl(
     client, cache, seeds, targets, expansion_depth, scratch, *, raw_fetch, resolver
 ):
     roots = sorted({(s.organism_id, s.gene_name) for s in seeds})
@@ -154,3 +154,10 @@ def _discover(
         if provenance_parts
         else _empty(TABLES["provenance"]),
     )
+
+
+def _discover(client, *args, **kwargs):
+    if client.run is None:
+        return _discover_impl(client, *args, **kwargs)
+    with client.run.stage("traversal"):
+        return _discover_impl(client, *args, **kwargs)

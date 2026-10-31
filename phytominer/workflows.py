@@ -224,6 +224,10 @@ def fetch_features(
             _run_lock(root),
             run_context(root, client, progress, limits, cancel) as run,
         ):
+            run.outcomes = [
+                {"organism_id": o, "gene_name": g, "status": "not_processed"}
+                for o, g in gene_keys
+            ]
             cache = RequestCache(root / "requests")
             with run.stage("metadata"):
                 fingerprint = cache.metadata(client, refresh)

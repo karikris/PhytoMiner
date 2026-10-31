@@ -467,3 +467,7 @@ Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake 
 ## 1.0.2 task 7.2
 Previous handshake: 2d12189. GitHits Polars 2.1.0 scan/sink APIs rechecked. Example fixtures now assert exact Arabidopsis-to-Sorghum evidence, meaningful SQL counts and offline behavior.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 1.0.2 task 7.3
+Previous handshake: 5aa80f3. GitHits DuckDB 2.0 relations and Arrow/Polars APIs rechecked. Offline pipeline parses real TSV fixtures and reports isolated stages, queries, opening cost and zero-network resume.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.

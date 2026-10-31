@@ -4,6 +4,7 @@ import json
 import hashlib
 import os
 import uuid
+import time
 from copy import deepcopy
 from .maintenance import maintenance_lock, reader_lease
 from pathlib import Path
@@ -113,6 +114,7 @@ class DatasetWriter:
         atomic_json(self.directory / "manifest.json", self.manifest)
 
     def write(self, name, frame):
+        started = time.monotonic()
         columns = TABLES.get(name)
         if columns is not None:
             frame = frame.select(
@@ -139,8 +141,11 @@ class DatasetWriter:
             "rows": pq.ParquetFile(path).metadata.num_rows,
         }
         atomic_json(self.directory / "manifest.json", self.manifest)
+        if active is not None:
+            active.timings["persist"] += time.monotonic() - started
 
     def finish(self, **details):
+        started = time.monotonic()
         from .run import CURRENT_RUN
 
         active = CURRENT_RUN.get()
@@ -153,6 +158,8 @@ class DatasetWriter:
             active.check()
         atomic_json(self.root / "manifest.json", pinned.manifest)
         self.manifest = deepcopy(pinned.manifest)
+        if active is not None:
+            active.timings["publication"] += time.monotonic() - started
         return pinned
 
 
