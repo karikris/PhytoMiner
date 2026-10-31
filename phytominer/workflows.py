@@ -6,7 +6,7 @@ import os
 import json
 lazy import polars as pl
 lazy import pyarrow.parquet as pq
-from .models import Seed, TABLES, FEATURE_ATTRIBUTES, ORTHOLOG_ATTRIBUTES, ValidationError, ServiceError, IncompleteDatasetError
+from .models import Seed, TABLES, RELATIONSHIP_COLUMNS, FEATURE_ATTRIBUTES, ORTHOLOG_ATTRIBUTES, ValidationError, ServiceError, IncompleteDatasetError
 from .biomart import BioMartClient
 from .storage import RequestCache, digest, checksum
 from .dataset import DatasetWriter, HomologDataset
@@ -62,7 +62,7 @@ def _jobs(keys, batch_size):
 
 def _resolve(client, cache, raw, scratch):
     if raw.limit(1).collect().is_empty():
-        return _empty(TABLES['relationships']), _empty(TABLES['features'])
+        return _empty(RELATIONSHIP_COLUMNS), _empty(TABLES['features'])
     source = raw.select(pl.col('ortholog__dm_gene_name').alias('gene_name'), pl.col('ortholog__dm_organism_name').alias('organism_name'))
     target = raw.select(pl.col('ortholog__dm_ortholog_gene_name').alias('gene_name'), pl.col('ortholog__dm_ortholog_organism_name').alias('organism_name'))
     refs = pl.concat([source, target]).unique()
@@ -89,7 +89,7 @@ def _resolve(client, cache, raw, scratch):
     if edges.filter(pl.col('_feature_source_organism_id').is_not_null() &
                     (pl.col('_feature_source_organism_id') != pl.col('source_organism_id'))).limit(1).collect().height:
         raise ServiceError('BioMart source feature identity conflicts with the requested organism')
-    return edges.select(TABLES['relationships']).unique(), features
+    return edges.select(RELATIONSHIP_COLUMNS).unique(), features
 
 def _discover(client, cache, seeds, targets, expansion_depth, scratch):
     roots = sorted({(s.organism_id,s.gene_name) for s in seeds})
@@ -97,12 +97,12 @@ def _discover(client, cache, seeds, targets, expansion_depth, scratch):
     visited = {root: {root} for root in roots}
     queried = set()
     edge_parts, feature_parts, provenance_parts = [], [], []
-    all_edges = _empty(TABLES['relationships'])
+    all_edges = _empty(RELATIONSHIP_COLUMNS)
     for depth in range(1, expansion_depth + 2):
         needed = set().union(*frontier.values()) - queried
         if needed:
             raw = _raw(client,cache,_jobs(needed,client.config.batch_size))
-            edges, features = _resolve(client,cache,raw,scratch) if raw is not None else (_empty(TABLES['relationships']),_empty(TABLES['features']))
+            edges, features = _resolve(client,cache,raw,scratch) if raw is not None else (_empty(RELATIONSHIP_COLUMNS),_empty(TABLES['features']))
             sources = pl.LazyFrame([{'source_organism_id':o,'source_gene_name':g} for o,g in sorted(needed)])
             edges = edges.join(sources,on=['source_organism_id','source_gene_name'],how='semi')
             if targets is not None:
@@ -158,6 +158,18 @@ def _normalize_targets(targets):
     return tuple(sorted(set(values)))
 
 
+def _resolution_status(edges, features):
+    identities = features.select('organism_id', 'organism_name', 'gene_name').unique()
+    for side in ('source', 'target'):
+        keys = [f'{side}_organism_id', f'{side}_organism_name', f'{side}_gene_name']
+        lookup = identities.rename(dict(zip(('organism_id', 'organism_name', 'gene_name'), keys)))
+        marker = f'_{side}_feature_verified'
+        edges = edges.join(lookup.with_columns(pl.lit(True).alias(marker)), on=keys, how='left', validate='m:1')
+        edges = edges.with_columns(pl.when(pl.col(marker).fill_null(False))
+            .then(pl.lit('resolved')).otherwise(pl.lit('missing_feature')).alias(f'{side}_resolution_status')).drop(marker)
+    return edges.select(TABLES['relationships'])
+
+
 def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_dir, client=None, refresh=False):
     """Retrieve reported seed relationships; labels never multiply edge evidence."""
     seeds = sorted(set(seed if isinstance(seed, Seed) else Seed(**seed) for seed in seeds),
@@ -192,7 +204,6 @@ def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_di
                 edges, features, provenance = (_empty(TABLES[name]) for name in ('relationships', 'features', 'provenance'))
             else:
                 edges, features, provenance = _discover(client, cache, seeds, target_organisms, expansion_depth, writer.directory)
-            writer.write('relationships',edges.sort(TABLES['relationships']))
             writer.write('provenance',provenance.select(TABLES['provenance']).sort(TABLES['provenance']))
             genes = pl.concat([seed_frame.select('organism_id','gene_name'), edges.select(pl.col('target_organism_id').alias('organism_id'),pl.col('target_gene_name').alias('gene_name'))]).filter(pl.col('organism_id').is_not_null()).unique()
             seed_jobs=(('features',batch,org) for _,batch,org in _jobs(((s.organism_id,s.gene_name) for s in seeds),client.config.batch_size))
@@ -201,10 +212,12 @@ def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_di
                 features=pl.concat([features,seed_features.rename(dict(zip(FEATURE_ATTRIBUTES,TABLES['features'])))]).unique()
             features = features.join(genes,on=['organism_id','gene_name'],how='semi')
             writer.write('unmatched_genes',genes.join(features.select('organism_id','gene_name').unique(),on=['organism_id','gene_name'],how='anti'))
+            edges = _resolution_status(edges, features)
+            writer.write('relationships',edges.sort(TABLES['relationships']))
             writer.write('features',features.sort(TABLES['features']))
             writer.write('genes',genes.sort('organism_id','gene_name'))
             writer.write('organisms',features.select('organism_id','organism_name').unique().sort('organism_id'))
-            unresolved=edges.filter(pl.col('target_organism_id').is_null() | pl.col('source_organism_id').is_null())
+            unresolved=edges.filter((pl.col('source_resolution_status') == 'missing_feature') | (pl.col('target_resolution_status') == 'missing_feature'))
             writer.write('unresolved_relationships',unresolved)
             return writer.finish(metadata_fingerprint=fingerprint, endpoint=client.config.endpoint, metrics=client.metrics, unresolved_identity_rows=writer.manifest['tables']['unresolved_relationships']['rows'])
     finally:

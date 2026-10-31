@@ -72,3 +72,8 @@ TABLES = {
     'provenance': ('root_organism_id', 'root_gene_name', 'source_organism_id', 'source_organism_name', 'source_gene_name', 'target_organism_id', 'target_organism_name', 'target_gene_name', 'depth'),
     'features': ('organism_id', 'organism_name', 'gene_name', 'pac_gene_id', 'transcript_name', 'pac_transcript_id'),
 }
+
+# Raw normalized edge grain, before feature-resolution diagnostics are attached.
+RELATIONSHIP_COLUMNS = TABLES['relationships']
+TABLES_V1 = dict(TABLES)
+TABLES['relationships'] = RELATIONSHIP_COLUMNS + ('source_resolution_status', 'target_resolution_status')

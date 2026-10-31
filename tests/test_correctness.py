@@ -135,3 +135,24 @@ def test_conflicting_source_feature_identity_rejected(tmp_path):
                 yield batch
     with pytest.raises(Exception, match='conflicts'):
         fetch_homologs([Seed('1','a')], output_dir=tmp_path, client=Conflict())
+
+@pytest.mark.parametrize('missing,source_status,target_status', [
+    (set(), 'resolved', 'resolved'),
+    ({'org1'}, 'missing_feature', 'resolved'),
+    ({'org2'}, 'resolved', 'missing_feature'),
+    ({'org1','org2'}, 'missing_feature', 'missing_feature'),
+])
+def test_resolution_status_preserves_both_sides(tmp_path, missing, source_status, target_status):
+    result = fetch_homologs([Seed('1','a')], target_organisms=['org2'], expansion_depth=2,
+        output_dir=tmp_path, client=MissingFeatures(missing))
+    rows = result.scan('relationships').collect().to_dicts()
+    edge = next(row for row in rows if row['source_gene_name'] == 'a')
+    assert edge['source_organism_id'] == '1'
+    assert edge['source_resolution_status'] == source_status
+    assert edge['target_resolution_status'] == target_status
+    if 'org2' in missing:
+        assert edge['target_organism_id'] is None
+    expected = sum(row['source_resolution_status'] == 'missing_feature' or row['target_resolution_status'] == 'missing_feature' for row in rows)
+    assert result.manifest['unresolved_identity_rows'] == expected
+    assert result.scan('unresolved_relationships').collect().height == expected
+    assert result.scan('provenance').collect().height >= 1

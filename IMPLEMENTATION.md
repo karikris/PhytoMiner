@@ -266,3 +266,11 @@ context carries the requested organism. Explicit mappings replace positional
 renaming. Unexpected source genes, absent source names and conflicting feature
 IDs fail clearly. Missing source features preserve evidence. Targeted and
 cumulative tests/diff checks PASS; task commit/clean-tree handshake PASS.
+
+## Task 2.2 — Resolution diagnostics
+Previous handshake: Task 2.1 commit. GitHits polars@2.1.0 conditional expressions,
+left-join null handling checked. Source/target statuses are resolved or
+missing_feature, computed against completed feature evidence. Known request IDs
+remain populated; unresolved targets keep null IDs. Both sides contribute to the
+unresolved evidence table/count. Benchmark declares its synthetic resolved status.
+Source/target/both missing regressions and cumulative suite PASS.

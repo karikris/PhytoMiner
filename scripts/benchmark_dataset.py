@@ -17,7 +17,9 @@ def run(rows):
         pl.lit('454').alias('target_organism_id'),pl.lit('Sbicolor_v3.1.1').alias('target_organism_name'),
         (pl.lit('gene_')+pl.col('n').cast(pl.String)).alias('target_gene_name'),
         (pl.lit('group_')+(pl.col('n')%100).cast(pl.String)).alias('ortholog_group'),
-        pl.lit('one-to-one').alias('relationship'))
+        pl.lit('one-to-one').alias('relationship'),
+        pl.lit('resolved').alias('source_resolution_status'),
+        pl.lit('resolved').alias('target_resolution_status'))
     with tempfile.TemporaryDirectory() as tmp:
         writer=DatasetWriter(tmp,{'benchmark_rows':rows})
         writer.write('relationships',frame)
