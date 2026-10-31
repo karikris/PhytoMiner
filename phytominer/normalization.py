@@ -86,13 +86,39 @@ def _resolve(client, cache, raw, scratch):
     gene_file = scratch / "resolve-ids.parquet"
     refs.select("gene_name").unique().sort("gene_name").sink_parquet(gene_file)
 
-    def jobs():
-        for batch in pq.ParquetFile(gene_file).iter_batches(
-            batch_size=client.config.batch_size
-        ):
-            yield "resolve", batch.column(0).to_pylist(), None
+    from .resolution import lookup, remember
 
-    features = _raw(client, cache, jobs())
+    known_paths, missing = set(), []
+    for batch in pq.ParquetFile(gene_file).iter_batches(
+        batch_size=client.config.batch_size
+    ):
+        paths, absent = lookup(cache, client, batch.column(0).to_pylist())
+        known_paths.update(paths)
+        missing.extend(absent)
+    previous = set(cache.used_paths)
+    jobs = (
+        ("resolve", missing[start : start + client.config.batch_size], None)
+        for start in range(0, len(missing), client.config.batch_size)
+    )
+    fetched = _raw(client, cache, jobs)
+    fresh_paths = cache.used_paths - previous
+    if missing:
+        # Include already-cached query parts used for a new resolution index.
+        fresh_paths.update(cache.used_paths - known_paths - previous)
+        if fetched is not None:
+            # Raw query identities can already exist even when the per-gene index does not.
+            for start in range(0, len(missing), client.config.batch_size):
+                fresh_paths.update(
+                    cache.fetch(
+                        client,
+                        "resolve",
+                        missing[start : start + client.config.batch_size],
+                        None,
+                    )
+                )
+        remember(cache, client, missing, fresh_paths)
+    paths = known_paths | fresh_paths
+    features = pl.scan_parquet(sorted(paths)) if paths else None
     if features is None:
         raise ServiceError("Could not resolve reported gene identities")
     feature_mapping: dict[str, str] = dict(zip(FEATURE_ATTRIBUTES, TABLES["features"]))

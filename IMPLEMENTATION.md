@@ -413,3 +413,7 @@ Schema/identity/provenance/run diagnostics suites PASS; no push.
 ## 1.0.2 task 3.1
 Previous handshake: 9a1d4de. GitHits ElementTree contracts reviewed. Canonical IDs/names/display labels resolve via unambiguous configuration options; fixtures are offline.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 1.0.2 task 3.2
+Previous handshake: 654ae15. GitHits Arrow 26 iter_batches reviewed. Resolution index keys include endpoint dataset metadata/version; parts are checksum/schema validated and refreshed explicitly.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
