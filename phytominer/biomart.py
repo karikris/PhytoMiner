@@ -177,6 +177,7 @@ class BioMartClient:
             ("datasets", {"mart": "phytozome_mart"}),
             ("attributes", {"dataset": self.config.dataset}),
             ("filters", {"dataset": self.config.dataset}),
+            ("configuration", {"dataset": self.config.dataset}),
         ]:
             with self._request("GET", params={"type": kind, **params}) as response:
                 result[kind] = response.text
@@ -336,3 +337,14 @@ class BioMartClient:
             (row for batch in self.query("organisms") for row in batch),
             key=lambda row: row["organism_id"],
         )
+
+    def catalog(self):
+        from .catalog import OrganismCatalog
+
+        metadata = self.metadata()
+        if "configuration" not in metadata:
+            with self._request(
+                "GET", params={"type": "configuration", "dataset": self.config.dataset}
+            ) as response:
+                metadata["configuration"] = response.text
+        return OrganismCatalog.from_xml(metadata["configuration"])

@@ -62,6 +62,17 @@ def fetch_homologs(
             cache = RequestCache(root / "requests", refresh=refresh)
             with run.stage("metadata"):
                 fingerprint = cache.metadata(client, refresh)
+                catalog = client.catalog()
+                fingerprint = cache.metadata(client)
+            seed_records = [
+                Seed(catalog.resolve(s.organism_id), s.gene_name, s.label)
+                for s in seed_records
+            ]
+            if target_organisms is not None:
+                ids = tuple(
+                    sorted({catalog.resolve(value) for value in target_organisms})
+                )
+                target_organisms = tuple(sorted((*ids, *catalog.names(ids))))
             identity = _result_identity(
                 "homologs",
                 seeds=[asdict(s) for s in seed_records],
@@ -194,6 +205,11 @@ def fetch_features(
             cache = RequestCache(root / "requests")
             with run.stage("metadata"):
                 fingerprint = cache.metadata(client, refresh)
+                catalog = client.catalog()
+                fingerprint = cache.metadata(client)
+            gene_keys = sorted(
+                {(catalog.resolve(org), gene) for org, gene in gene_keys}
+            )
             identity = _result_identity(
                 "features",
                 genes=gene_keys,

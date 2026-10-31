@@ -6,7 +6,10 @@ from phytominer.models import FEATURE_ATTRIBUTES, ORTHOLOG_ATTRIBUTES
 class FixtureClient(BioMartClient):
     def __init__(self,config=None):
         super().__init__(config); self.calls=[]
-    def metadata(self): return {'fixture':'v1'}
+    def metadata(self):
+        organisms=[('1','org1'),('2','org2'),('167','org167'),('454','Sbicolor_v3.1.1')]
+        config='<DatasetConfig><FilterDescription internalName="organism_id">'+''.join(f'<Option value="{id}" displayName="{name}"/>' for id,name in organisms)+'</FilterDescription><FilterDescription internalName="ortholog_organism_name">'+''.join(f'<Option value="{name}" displayName="{name}"/>' for id,name in organisms)+'</FilterDescription></DatasetConfig>'
+        return {'fixture':'v1','configuration':config}
     def validate_metadata(self,data): pass
     def query(self,page,genes=(),organism_id=None):
         self.calls.append((page,tuple(genes),organism_id))

@@ -406,3 +406,10 @@ Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake 
 ## 1.0.2 task 2.4
 Previous handshake: a781662. GitHits CPython 3.15.2 timing and context managers reviewed. Counters and request slices are per invocation; stopped diagnostics remain private.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 1.0.2 Phase 2 gate
+Schema/identity/provenance/run diagnostics suites PASS; no push.
+
+## 1.0.2 task 3.1
+Previous handshake: 9a1d4de. GitHits ElementTree contracts reviewed. Canonical IDs/names/display labels resolve via unambiguous configuration options; fixtures are offline.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
