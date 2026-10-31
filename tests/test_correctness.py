@@ -66,3 +66,25 @@ def test_old_processed_result_rebuilds_from_raw_cache(tmp_path):
     assert rebuilt.manifest['identity'] != old['identity']
     assert rebuilt.manifest['tables']['relationships']['file'] != original.manifest['tables']['relationships']['file']
     assert len(client.calls) == count
+
+@pytest.mark.parametrize('targets,depth,expected', [(None, 0, 1), ([], 0, 0), (['1','2'], 3, 2)])
+def test_selection_refresh_and_resume(tmp_path, targets, depth, expected):
+    client = FixtureClient()
+    kwargs = dict(target_organisms=targets, expansion_depth=depth, output_dir=tmp_path, client=client)
+    first = fetch_homologs([Seed('1','a')], **kwargs)
+    count = len(client.calls)
+    resumed = fetch_homologs([Seed('1','a')], **kwargs)
+    assert first.manifest == resumed.manifest
+    assert len(client.calls) == count
+    refreshed = fetch_homologs([Seed('1','a')], refresh=True, **kwargs)
+    assert len(client.calls) > count
+    assert refreshed.scan('relationships').collect().height == expected
+    count = len(client.calls)
+    fetch_homologs([Seed('1','a')], **kwargs)
+    assert len(client.calls) == count
+
+
+def test_expansion_empty_boundary_rejected(tmp_path):
+    with pytest.raises(ValidationError, match='boundary'):
+        fetch_homologs([Seed('1','a')], target_organisms=[], expansion_depth=1, output_dir=tmp_path)
+    assert not tmp_path.joinpath('manifest.json').exists()

@@ -102,3 +102,9 @@ an injected fixture client. Details and research evidence: [implementation ledge
 License: [MIT](LICENSE).
 
 Measured workload results and limitations: [validation report](docs/validation.json).
+
+Target selection is explicit: `target_organisms=None` retrieves all reported
+organisms; `target_organisms=[]` retrieves no relationships and skips ortholog
+requests while retaining seed feature enrichment. Selections are normalized once,
+so duplicate or reordered selections resume equivalently. Processing-contract
+changes rebuild published results from compatible validated raw checkpoints.

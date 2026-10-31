@@ -248,3 +248,13 @@ contracts checked. Canonical target mode and processing contract version 2 apply
 to all processed workflow identities; raw XML cache hashes remain unchanged.
 Both request orders, equivalent selections, and old-result rebuild from raw cache
 pass with the cumulative suite. Task commit/clean-tree handshake PASS.
+
+## Task 1.3 — Selection integration
+Previous handshakes: 5c9e045, Task 1.2 commit. GitHits pytest@9.2.0 parametrization
+patterns checked. Direct, empty and bounded expansion selections tested across
+refresh and unchanged resume; expansion still rejects an empty boundary.
+Documentation states exact semantics. Cumulative suite and diff checks PASS.
+
+## Phase 1 handshake
+All three task acceptance checks PASS. Both original cache-collision orders are
+covered. No push performed; proceed to source identity preservation.
