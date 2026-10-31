@@ -23,3 +23,11 @@ confirms sys.modules is observable import evidence. Removed all old runtime
 modules, tests and outdated review; no compatibility facade retained.
 Acceptance: replacement import/removal tests pass and dependency lock excludes
 the old backend and dataframe/plotting stack. Task handshake PASS.
+
+## 1.3 Lightweight contracts
+Previous handshake: 7371279. GitHits: CPython v3.15.2
+Doc/library/dataclasses.rst:569-575 verifies post-init validation;
+Doc/reference/simple_stmts.rst:892-902 verifies lazy exported names.
+Delivered frozen seed/configuration contracts, typed exceptions and table grains.
+Acceptance: all eight contract tests pass; fresh-process import remains light.
+Task handshake PASS. Phase 1 ready for remote verification.
