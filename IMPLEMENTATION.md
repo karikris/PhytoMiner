@@ -487,3 +487,7 @@ One push follows; close issues only after exact-SHA CI passes every job.
 ## 1.0.2 task 7.4
 Previous handshake: aa4aaa9. GitHits Polars 2.1.0 sink/expression contracts reviewed. Low/high cardinality million-row checks, varied graph transcripts/missing features, minimum dependencies and operational acceptance map complete.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 1.0.2 task corrective
+Previous handshake: 2746b54. Windows exact-SHA CI caught an arrival-time assertion invalid under network/thread jitter. Record actual scheduler reservations and assert their spacing; preserve local-server concurrency checks. GitHits monotonic clock contracts reviewed.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.

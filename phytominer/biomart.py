@@ -103,7 +103,8 @@ class BioMartClient:
                     delay = max(self._next_start, self._cooldown) - time.monotonic()
                     if self._active < self.effective_workers and delay <= 0:
                         self._active += 1
-                        self._next_start = time.monotonic() + 1 / self._scheduler.rate
+                        scheduled_at = time.monotonic()
+                        self._next_start = scheduled_at + 1 / self._scheduler.rate
                         break
                     self._condition.wait(
                         min(0.05, max(0.001, delay)) if delay > 0 else 0.05
@@ -154,6 +155,7 @@ class BioMartClient:
                 self.metrics.append(
                     {
                         "method": method,
+                        "scheduled_at": scheduled_at,
                         "attempt": attempt + 1,
                         "seconds": time.monotonic() - started,
                         "retry": True,
@@ -190,6 +192,7 @@ class BioMartClient:
             self.metrics.append(
                 {
                     "method": method,
+                    "scheduled_at": scheduled_at,
                     "status": response.status_code,
                     "seconds": time.monotonic() - started,
                     "retry": False,
