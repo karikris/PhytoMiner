@@ -26,3 +26,21 @@ def test_organism_resolution():
     cat.append({'organism_id': '3', 'organism_name': 'TAIR10'})
     with pytest.raises(ValidationError):
         BioMartClient.resolve_organism('TAIR10', cat)
+
+def test_xml_escaping():
+    import xml.etree.ElementTree as ET
+    xml, columns = BioMartClient().build_query('orthologs', ['a&<b'], '167')
+    root = ET.fromstring(xml)
+    assert root.find('.//Filter[@name="gene_name_filter"]').get('value') == 'a&<b'
+    assert tuple(x.get('name') for x in root.findall('.//Attribute')) == columns
+    with pytest.raises(ValidationError):
+        BioMartClient().build_query('unsupported', ['x'], '1')
+
+@pytest.mark.parametrize('lines', [['x'], ['Query ERROR: bad'], ['<html>login'], ['[success]', 'x\ty']])
+def test_bad_responses(lines):
+    with pytest.raises(ServiceError):
+        list(BioMartClient.parse_lines(lines, ('a','b')))
+
+def test_empty_and_bounded_responses():
+    assert list(BioMartClient.parse_lines(['[success]'], ('a','b'))) == []
+    assert list(BioMartClient.parse_lines(['x\t', 'y\tz', '[success]'], ('a','b'), batch_size=1)) == [[{'a':'x','b':None}], [{'a':'y','b':'z'}]]

@@ -40,3 +40,11 @@ Previous task: 740c3b5. GitHits pypi:requests@2.34.2 src/requests/adapters.py
 and hosted models.raise_for_status verify transport/status APIs. Live official
 dataset metadata confirms phytozome and separate attribute pages.
 Acceptance: metadata/schema/organism identity tests and cumulative suite PASS.
+
+## 2.2 XML and streaming parser
+Previous handshake: f07311d. GitHits requests@2.34.2
+src/requests/models.py:990-1028 confirms iter_lines with stream=True avoids
+whole-response loading. Explicit UTF-8 encoding; fixed attribute-order parser.
+Acceptance: escaping, unknown page, error/HTML, truncation, empty and bounded
+batch tests plus cumulative suite PASS. Yielded batches remain provisional until
+completion; phase 3 storage commits only after generator exhaustion.
