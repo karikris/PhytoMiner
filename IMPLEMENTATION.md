@@ -31,3 +31,12 @@ Doc/reference/simple_stmts.rst:892-902 verifies lazy exported names.
 Delivered frozen seed/configuration contracts, typed exceptions and table grains.
 Acceptance: all eight contract tests pass; fresh-process import remains light.
 Task handshake PASS. Phase 1 ready for remote verification.
+
+## Phase 1 remote handshake
+740c3b5: run 41176375569 PASS on Linux, macOS, Windows; origin/main matches.
+
+## 2.1 Metadata
+Previous task: 740c3b5. GitHits pypi:requests@2.34.2 src/requests/adapters.py
+and hosted models.raise_for_status verify transport/status APIs. Live official
+dataset metadata confirms phytozome and separate attribute pages.
+Acceptance: metadata/schema/organism identity tests and cumulative suite PASS.
