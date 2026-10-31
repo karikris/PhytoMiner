@@ -58,3 +58,12 @@ class HomologDataset:
         if table not in self.manifest['tables']:
             raise ValidationError(f'Unknown table: {table}')
         return pl.scan_parquet(self.root / self.manifest['tables'][table]['file'])
+
+    def summary(self):
+        """Count reported edges and distinct genes without label/transcript fanout."""
+        return self.scan('relationships').unique().group_by(
+            'target_organism_id','target_organism_name','relationship').agg(
+                pl.col('target_gene_name').n_unique().alias('homolog_genes'),
+                pl.struct('source_organism_id','source_gene_name').n_unique().alias('query_genes'),
+                pl.len().alias('reported_edges'),
+            ).sort('target_organism_id','target_organism_name','relationship')

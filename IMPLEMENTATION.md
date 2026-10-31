@@ -130,3 +130,15 @@ unresolved_relationships table and manifest count, and skip those nodes during
 expansion. Ambiguous mappings still fail. This evidence-driven adjustment avoids
 both data loss and invented IDs. Added a stale-target regression test. GitHits
 Polars left-join/null-preservation contracts apply. Cumulative suite PASS.
+
+## Phase 4 remote handshake
+b080c9d: run 41177295268 PASS on all platforms. Live all-target run retains
+585 relationships with five explicitly unresolved target identities; Sorghum-only
+run returns one edge, two genes and two feature records. Unchanged live resume
+makes zero HTTP requests. Fixtures match across workers 1/2/4.
+
+## 5.1 Lazy analytics
+Previous handshake: b080c9d. GitHits polars@2.1.0 group_by/agg/struct/n_unique
+API evidence checked. summary() is lazy and counts unique edges, query genes and
+target genes without joining labels/transcripts. Acceptance: lazy result and
+scientific-grain regression plus cumulative suite PASS.
