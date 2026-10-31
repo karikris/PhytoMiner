@@ -5,9 +5,9 @@ from .models import ValidationError
 from .storage import checksum
 from .inputs import _result_identity
 from .lifecycle import _run_lock
-from .dataset import DatasetWriter
+from .dataset import DatasetWriter, HomologDataset
 
-def join_annotations(dataset, annotation_file, *, organism_column='organism_id', gene_column='gene_name', has_header=True, column_names=None, output_dir=None):
+def join_annotations(dataset: HomologDataset, annotation_file: str | Path, *, organism_column='organism_id', gene_column='gene_name', has_header=True, column_names=None, output_dir: str | Path | None = None) -> pl.LazyFrame | HomologDataset:
     """Left join unique organism/gene annotations; ambiguous keys are errors."""
     path=Path(annotation_file)
     if path.suffix=='.parquet':

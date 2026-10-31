@@ -77,3 +77,19 @@ TABLES = {
 RELATIONSHIP_COLUMNS = TABLES['relationships']
 TABLES_V1 = dict(TABLES)
 TABLES['relationships'] = RELATIONSHIP_COLUMNS + ('source_resolution_status', 'target_resolution_status')
+
+
+class AnnotationError(ValidationError):
+    """Invalid annotation interpretation or keys."""
+
+class CancelledError(PhytoMinerError):
+    """A caller cancelled a run; completed checkpoints remain valid."""
+
+class DeadlineExceededError(PhytoMinerError):
+    """The invocation deadline expired."""
+
+class BudgetExceededError(PhytoMinerError):
+    def __init__(self, limit: str, observed: int | float):
+        self.limit = limit
+        self.observed = observed
+        super().__init__(f'{limit} budget exceeded: {observed}')

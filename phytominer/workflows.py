@@ -1,6 +1,7 @@
 """Public orchestration for BioMart dataset workflows."""
 from dataclasses import asdict
 from pathlib import Path
+from .contracts import Seeds, Targets
 lazy import polars as pl
 from .models import Seed, TABLES, FEATURE_ATTRIBUTES, ValidationError, IncompleteDatasetError
 from .biomart import BioMartClient
@@ -12,7 +13,7 @@ from .normalization import _empty, _raw, _jobs, _resolve, _resolution_status
 from .traversal import _discover
 from .annotations import join_annotations
 
-def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_dir, client=None, refresh=False):
+def fetch_homologs(seeds: Seeds, *, target_organisms: Targets = None, expansion_depth: int = 0, output_dir: str | Path, client: BioMartClient | None = None, refresh: bool = False) -> HomologDataset:
     """Retrieve reported seed relationships; labels never multiply edge evidence."""
     seeds = sorted(set(seed if isinstance(seed, Seed) else Seed(**seed) for seed in seeds),
                    key=lambda s:(s.organism_id,s.gene_name,s.label is not None,s.label or ''))
@@ -65,7 +66,7 @@ def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_di
     finally:
         if owned: client.close()
 
-def fetch_features(genes, *, output_dir, client=None, refresh=False):
+def fetch_features(genes: Seeds, *, output_dir: str | Path, client: BioMartClient | None = None, refresh: bool = False) -> HomologDataset:
     """Retrieve transcript-grain features for organism-qualified genes."""
     genes = sorted({(s.organism_id,s.gene_name) for s in
                     (g if isinstance(g,Seed) else Seed(**g) for g in genes)})

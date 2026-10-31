@@ -373,3 +373,7 @@ issues. Final SHA, CI URL and issue URLs are recorded in the completion report.
 ## 1.0.2 task 1.1
 Previous handshake: 1673b22. GitHits Polars 2.1.0 lazy-frame contracts reviewed. Public facade and monkeypatch seams preserved.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 1.0.2 task 1.2
+Previous handshake: 6a64c6d. GitHits CPython 3.15.2 typing Protocol reviewed; deferred annotations preserve lightweight imports.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.

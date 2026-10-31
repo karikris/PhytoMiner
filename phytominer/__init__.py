@@ -11,3 +11,6 @@ __all__ += ['BioMartClient', 'HomologDataset', 'fetch_homologs']
 
 lazy from .workflows import fetch_features, join_annotations
 __all__ += ['fetch_features', 'join_annotations']
+
+lazy from .models import AnnotationError, CancelledError, DeadlineExceededError, BudgetExceededError
+__all__ += ['AnnotationError', 'CancelledError', 'DeadlineExceededError', 'BudgetExceededError']
