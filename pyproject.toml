@@ -10,16 +10,19 @@ authors = [
 ]
 description = "A Python library for efficiently fetching and processing gene homolog data from the Phytozome database."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.15"
 classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.15",
     "Topic :: Scientific/Engineering :: Bio-Informatics"
 ]
 dependencies = [
     "pandas",
+    "polars>=2.1,<3",
+    "duckdb>=2,<3",
+    "pyarrow>=26,<27",
     "intermine",
     "requests",
     "seaborn",
@@ -27,11 +30,11 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/boffus/PhytoMiner"
-"Bug Tracker" = "https://github.com/boffus/PhytoMiner/issues"
+"Homepage" = "https://github.com/karikris/PhytoMiner"
+"Bug Tracker" = "https://github.com/karikris/PhytoMiner/issues"
 
 [project.optional-dependencies]
-dev = ["pytest", "pytest-mock"]
+dev = ["pytest>=9.2,<10", "pytest-mock", "build>=1.6,<2"]
 
 [tool.setuptools.packages.find]
 where = ["."]
