@@ -57,7 +57,8 @@ def write_batches(path, columns, batches):
         Path(temp).unlink(missing_ok=True)
 
 class RequestCache:
-    def __init__(self, root):
+    def __init__(self, root, refresh=False):
+        self.refresh = refresh
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
 
@@ -94,6 +95,7 @@ class RequestCache:
 
     def fetch(self, client, page, genes=(), organism_id=None, refresh=False):
         from .models import BatchSizeError
+        refresh = refresh or self.refresh
         xml, columns = client.build_query(page, genes, organism_id)
         key = digest({'xml': xml, 'endpoint': client.config.endpoint,
                       'metadata': client.metadata_fingerprint, 'schema_version': SCHEMA_VERSION})

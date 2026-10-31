@@ -115,3 +115,9 @@ transcript; unmatched genes are explicit. CSV/TSV/Parquet annotations join on
 organism+gene with duplicate-key rejection and optional derived dataset output.
 Acceptance: transcript grain, organism-qualified annotation matching, unmatched
 flags, duplicate rejection and cumulative suite PASS.
+
+## Phase 4 corrective handshake
+Review found refresh should replace canonical request checkpoints rather than
+use a separate transient namespace. Corrected and added a regression test;
+cleaned exception/annotation handling. GitHits atomic replacement evidence from
+3.2 applies. Cumulative suite PASS; phase gate restarts on corrected SHA.

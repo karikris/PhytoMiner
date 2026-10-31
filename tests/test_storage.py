@@ -70,3 +70,10 @@ def test_publication_and_incomplete_run(tmp_path):
     path = tmp_path / result.manifest['tables']['genes']['file']
     path.write_bytes(b'corrupt')
     with pytest.raises(IncompleteDatasetError): HomologDataset(tmp_path)
+
+def test_refresh_replaces_canonical_cache(tmp_path):
+    client=FakeClient()
+    RequestCache(tmp_path).fetch(client,'features',['a'],'167')
+    RequestCache(tmp_path,refresh=True).fetch(client,'features',['a'],'167')
+    RequestCache(tmp_path).fetch(client,'features',['a'],'167')
+    assert client.calls==2

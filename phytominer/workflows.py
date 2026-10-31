@@ -6,9 +6,9 @@ import os
 import json
 lazy import polars as pl
 lazy import pyarrow.parquet as pq
-from .models import Seed, TABLES, FEATURE_ATTRIBUTES, ValidationError, ServiceError
+from .models import Seed, TABLES, FEATURE_ATTRIBUTES, ValidationError, ServiceError, IncompleteDatasetError
 from .biomart import BioMartClient
-from .storage import RequestCache, digest
+from .storage import RequestCache, digest, checksum
 from .dataset import DatasetWriter, HomologDataset
 
 @contextmanager
@@ -132,11 +132,8 @@ def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_di
     client = client or BioMartClient()
     try:
         with _run_lock(root):
-            cache = RequestCache(root / 'requests')
+            cache = RequestCache(root / 'requests', refresh=refresh)
             fingerprint = cache.metadata(client, refresh)
-            if refresh:
-                # Refresh is scoped by a new metadata snapshot and bypasses request reuse.
-                cache = RequestCache(root / 'refresh' / __import__('uuid').uuid4().hex)
             identity = digest({'seeds':[asdict(s) for s in seeds], 'targets':sorted(target_organisms or []),
                 'depth':expansion_depth, 'metadata':fingerprint, 'endpoint':client.config.endpoint})
             if not refresh:
@@ -144,9 +141,8 @@ def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_di
                     result = HomologDataset(root)
                     if result.manifest['identity'] == identity:
                         return result
-                except Exception as exc:
-                    from .models import IncompleteDatasetError
-                    if not isinstance(exc, IncompleteDatasetError): raise
+                except IncompleteDatasetError:
+                    pass
             writer = DatasetWriter(root, identity)
             seed_frame = pl.LazyFrame([asdict(s) for s in seeds], schema={c:pl.String for c in TABLES['seeds']})
             writer.write('seeds', seed_frame)
@@ -182,7 +178,7 @@ def fetch_features(genes, *, output_dir, client=None, refresh=False):
                 try:
                     previous=HomologDataset(root)
                     if previous.manifest['identity']==identity: return previous
-                except __import__('phytominer.models',fromlist=['IncompleteDatasetError']).IncompleteDatasetError:
+                except IncompleteDatasetError:
                     pass
             writer=DatasetWriter(root,identity)
             jobs=(('features',batch,org) for _,batch,org in _jobs(genes,client.config.batch_size))
@@ -213,7 +209,7 @@ def join_annotations(dataset, annotation_file, *, organism_column='organism_id',
         raise ValidationError('Annotation format must be CSV, TSV or Parquet')
     keys=['organism_id','gene_name']
     annotation=annotation.rename({organism_column:'organism_id',gene_column:'gene_name'}).with_columns(pl.col(keys).cast(pl.String))
-    if annotation.filter(pl.any_horizontal(pl.col(keys).is_null() | (pl.col(keys)==' ' ) | (pl.col(keys)==''))).limit(1).collect().height:
+    if annotation.filter(pl.any_horizontal(pl.col(keys).is_null() | (pl.col(keys).str.strip_chars()=='') | (pl.col(keys)==''))).limit(1).collect().height:
         raise ValidationError('Annotation keys must be nonempty')
     if annotation.group_by(keys).len().filter(pl.col('len')>1).limit(1).collect().height:
         raise ValidationError('Annotation organism/gene keys must be unique')
@@ -224,7 +220,7 @@ def join_annotations(dataset, annotation_file, *, organism_column='organism_id',
     if root.resolve()==dataset.root.resolve():
         raise ValidationError('Use a separate output directory for annotated datasets')
     with _run_lock(root):
-        writer=DatasetWriter(root,digest({'parent':dataset.manifest['identity'],'annotation':__import__('phytominer.storage',fromlist=['checksum']).checksum(path)}))
+        writer=DatasetWriter(root,digest({'parent':dataset.manifest['identity'],'annotation':checksum(path)}))
         for table in dataset.manifest['tables']: writer.write(table,dataset.scan(table))
         writer.write('annotations',annotation)
         writer.write('annotated_genes',result)
