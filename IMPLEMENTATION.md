@@ -258,3 +258,11 @@ Documentation states exact semantics. Cumulative suite and diff checks PASS.
 ## Phase 1 handshake
 All three task acceptance checks PASS. Both original cache-collision orders are
 covered. No push performed; proceed to source identity preservation.
+
+## Task 2.1 — Authoritative source context
+Previous handshake: Phase 1 complete. GitHits polars@2.1.0 LazyFrame join/rename
+and with_columns contracts checked. Ortholog cache files remain raw; scan-time
+context carries the requested organism. Explicit mappings replace positional
+renaming. Unexpected source genes, absent source names and conflicting feature
+IDs fail clearly. Missing source features preserve evidence. Targeted and
+cumulative tests/diff checks PASS; task commit/clean-tree handshake PASS.

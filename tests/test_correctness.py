@@ -88,3 +88,50 @@ def test_expansion_empty_boundary_rejected(tmp_path):
     with pytest.raises(ValidationError, match='boundary'):
         fetch_homologs([Seed('1','a')], target_organisms=[], expansion_depth=1, output_dir=tmp_path)
     assert not tmp_path.joinpath('manifest.json').exists()
+
+class MissingFeatures(FixtureClient):
+    def __init__(self, missing, config=None):
+        super().__init__(config)
+        self.missing = missing
+
+    def query(self, page, genes=(), organism_id=None):
+        for batch in super().query(page, genes, organism_id):
+            if page != 'orthologs':
+                batch = [row for row in batch if row['organism_name'] not in self.missing]
+            yield batch
+
+
+def test_missing_source_preserves_request_identity(tmp_path):
+    result = fetch_homologs([Seed('1','a')], output_dir=tmp_path, client=MissingFeatures({'org1'}))
+    edge = result.scan('relationships').collect().to_dicts()[0]
+    assert edge['source_organism_id'] == '1'
+    assert edge['source_organism_name'] == 'org1'
+    assert result.scan('provenance').collect().height == 1
+
+
+def test_shared_gene_name_keeps_source_context(tmp_path):
+    result = fetch_homologs([Seed('1','a'), Seed('2','a')], output_dir=tmp_path, client=FixtureClient())
+    assert result.scan('relationships').collect()['source_organism_id'].to_list() == ['1', '2']
+
+
+def test_unexpected_source_is_rejected(tmp_path):
+    class Unexpected(FixtureClient):
+        def query(self, page, genes=(), organism_id=None):
+            for batch in super().query(page, genes, organism_id):
+                if page == 'orthologs':
+                    for row in batch: row['ortholog__dm_gene_name'] = 'unexpected'
+                yield batch
+    with pytest.raises(Exception, match='unexpected source'):
+        fetch_homologs([Seed('1','a')], output_dir=tmp_path, client=Unexpected())
+
+
+def test_conflicting_source_feature_identity_rejected(tmp_path):
+    class Conflict(FixtureClient):
+        def query(self, page, genes=(), organism_id=None):
+            for batch in super().query(page, genes, organism_id):
+                if page != 'orthologs':
+                    for row in batch:
+                        if row['organism_name'] == 'org1': row['organism_id'] = '99'
+                yield batch
+    with pytest.raises(Exception, match='conflicts'):
+        fetch_homologs([Seed('1','a')], output_dir=tmp_path, client=Conflict())

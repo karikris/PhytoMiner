@@ -6,7 +6,7 @@ import os
 import json
 lazy import polars as pl
 lazy import pyarrow.parquet as pq
-from .models import Seed, TABLES, FEATURE_ATTRIBUTES, ValidationError, ServiceError, IncompleteDatasetError
+from .models import Seed, TABLES, FEATURE_ATTRIBUTES, ORTHOLOG_ATTRIBUTES, ValidationError, ServiceError, IncompleteDatasetError
 from .biomart import BioMartClient
 from .storage import RequestCache, digest, checksum
 from .dataset import DatasetWriter, HomologDataset
@@ -29,13 +29,27 @@ def _empty(columns):
     return pl.LazyFrame(schema={c: pl.Int64 if c == 'depth' else pl.String for c in columns})
 
 def _raw(client, cache, jobs):
-    paths = []
+    paths, contextual_frames = [], []
     def execute(job):
         page, genes, organism = job
-        return cache.fetch(client, page, genes, organism)
-    for result in client.map(execute, jobs):
-        paths.extend(result)
+        return job, cache.fetch(client, page, genes, organism)
+    for (page, genes, organism), result in client.map(execute, jobs):
+        if page == 'orthologs':
+            frame = pl.scan_parquet(sorted(set(result)))
+            invalid = frame.filter(
+                pl.col('ortholog__dm_gene_name').is_null()
+                | ~pl.col('ortholog__dm_gene_name').is_in(genes)
+                | pl.col('ortholog__dm_organism_name').is_null()
+            )
+            if invalid.limit(1).collect().height:
+                raise ServiceError('BioMart returned an unexpected source gene or missing source name')
+            contextual_frames.append(frame.with_columns(pl.lit(organism).alias('_requested_source_organism_id')))
+        else:
+            paths.extend(result)
+    if contextual_frames:
+        return pl.concat(contextual_frames)
     return pl.scan_parquet(sorted(set(paths))) if paths else None
+
 
 def _jobs(keys, batch_size):
     groups = {}
@@ -65,11 +79,16 @@ def _resolve(client, cache, raw, scratch):
     identities = features.select('organism_name','gene_name','organism_id').unique()
     if identities.group_by('organism_name','gene_name').len().filter(pl.col('len')>1).limit(1).collect().height:
         raise ServiceError('Ambiguous organism/gene identity in BioMart features')
-    edges = raw.rename(dict(zip(raw.collect_schema().names(),
-        ['ortholog_group','source_gene_name','source_organism_name','target_gene_name','target_organism_name','relationship'])))
+    mapping = dict(zip(ORTHOLOG_ATTRIBUTES,
+        ['ortholog_group','source_gene_name','source_organism_name','target_gene_name','target_organism_name','relationship']))
+    edges = raw.rename(mapping).with_columns(pl.col('_requested_source_organism_id').alias('source_organism_id'))
     for side in ('source','target'):
-        lookup = identities.rename({'organism_name':side+'_organism_name','gene_name':side+'_gene_name','organism_id':side+'_organism_id'})
+        id_column = '_feature_source_organism_id' if side == 'source' else 'target_organism_id'
+        lookup = identities.rename({'organism_name':side+'_organism_name','gene_name':side+'_gene_name','organism_id':id_column})
         edges = edges.join(lookup, on=[side+'_organism_name',side+'_gene_name'], how='left', validate='m:1')
+    if edges.filter(pl.col('_feature_source_organism_id').is_not_null() &
+                    (pl.col('_feature_source_organism_id') != pl.col('source_organism_id'))).limit(1).collect().height:
+        raise ServiceError('BioMart source feature identity conflicts with the requested organism')
     return edges.select(TABLES['relationships']).unique(), features
 
 def _discover(client, cache, seeds, targets, expansion_depth, scratch):
