@@ -48,3 +48,12 @@ whole-response loading. Explicit UTF-8 encoding; fixed attribute-order parser.
 Acceptance: escaping, unknown page, error/HTML, truncation, empty and bounded
 batch tests plus cumulative suite PASS. Yielded batches remain provisional until
 completion; phase 3 storage commits only after generator exhaustion.
+
+## 2.3 Transport scheduler
+Previous handshake: a810d1c. GitHits CPython v3.15.2
+Doc/library/concurrent.futures.rst:642-652 verifies wait/pending-future semantics.
+Requests 2.34.2 streaming API evidence reused. Worker-local connection reuse,
+bounded futures, shared start limiter, retry-after cooldown and serial downgrade.
+Acceptance: local HTTP server verifies retry, rate, concurrency and terminal
+failures; cumulative tests PASS. BatchSizeError signals transactional splitting
+in the storage consumer rather than yielding duplicate retry data.

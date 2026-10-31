@@ -11,6 +11,9 @@ class ValidationError(PhytoMinerError, ValueError):
 class ServiceError(PhytoMinerError):
     pass
 
+class BatchSizeError(ServiceError):
+    pass
+
 class IncompleteDatasetError(PhytoMinerError):
     pass
 

@@ -1,15 +1,28 @@
 """BioMart metadata and XML adapter. External field names stay in this module."""
 import hashlib
 import json
+import time
+import threading
+import random
+from contextlib import contextmanager
+from email.utils import parsedate_to_datetime
+from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 import xml.etree.ElementTree as ET
 lazy import requests
-from .models import ClientConfig, ServiceError, ValidationError, ORTHOLOG_ATTRIBUTES, FEATURE_ATTRIBUTES
+from .models import BatchSizeError, ClientConfig, ServiceError, ValidationError, ORTHOLOG_ATTRIBUTES, FEATURE_ATTRIBUTES
 
 class BioMartClient:
     def __init__(self, config=None):
         self.config = config or ClientConfig()
         self._metadata = None
         self._sessions = []
+        self._local = threading.local()
+        self._condition = threading.Condition()
+        self._active = 0
+        self._next_start = 0.0
+        self._cooldown = 0.0
+        self.effective_workers = self.config.max_workers
+        self.metrics = []
 
     def __enter__(self):
         return self
@@ -22,17 +35,94 @@ class BioMartClient:
             session.close()
         self._sessions.clear()
 
+    def _session(self):
+        if not hasattr(self._local, 'session'):
+            self._local.session = requests.Session()
+            self._sessions.append(self._local.session)
+        return self._local.session
+
+    @contextmanager
     def _request(self, method, **kwargs):
-        session = requests.Session()
-        self._sessions.append(session)
+        response = None
+        for attempt in range(self.config.attempts):
+            with self._condition:
+                while True:
+                    delay = max(self._next_start, self._cooldown) - time.monotonic()
+                    if self._active < self.effective_workers and delay <= 0:
+                        self._active += 1
+                        self._next_start = time.monotonic() + 1 / self.config.requests_per_second
+                        break
+                    self._condition.wait(max(0.001, delay) if delay > 0 else 0.05)
+            started = time.monotonic()
+            try:
+                response = self._session().request(method, self.config.endpoint,
+                    timeout=(self.config.connect_timeout, self.config.read_timeout), **kwargs)
+                status = response.status_code
+                if status in (413, 414):
+                    raise BatchSizeError('BioMart batch is too large')
+                if status == 429:
+                    value = response.headers.get('Retry-After', '1')
+                    try:
+                        delay = float(value)
+                    except ValueError:
+                        try:
+                            delay = max(0, parsedate_to_datetime(value).timestamp() - time.time())
+                        except (TypeError, ValueError):
+                            delay = 1
+                    with self._condition:
+                        self._cooldown = max(self._cooldown, time.monotonic() + delay)
+                        self.effective_workers = 1
+                if status == 429 or status >= 500:
+                    response.close()
+                    raise requests.ConnectionError(f'Transient HTTP {status}')
+                response.raise_for_status()
+                response.encoding = 'utf-8'
+            except (requests.ConnectionError, requests.Timeout) as exc:
+                with self._condition:
+                    self._active -= 1
+                    self._condition.notify_all()
+                self.metrics.append({'method': method, 'attempt': attempt + 1, 'seconds': time.monotonic() - started, 'retry': True})
+                if attempt + 1 == self.config.attempts:
+                    raise BatchSizeError('BioMart request exhausted transient retries') from exc
+                time.sleep(0.25 * 2 ** attempt + random.uniform(0, 0.1))
+                continue
+            except Exception as exc:
+                if response is not None:
+                    response.close()
+                with self._condition:
+                    self._active -= 1
+                    self._condition.notify_all()
+                if isinstance(exc, requests.RequestException):
+                    raise ServiceError('BioMart HTTP request failed') from exc
+                raise
+            break
         try:
-            response = session.request(method, self.config.endpoint,
-                timeout=(self.config.connect_timeout, self.config.read_timeout), **kwargs)
-            response.raise_for_status()
-            response.encoding = 'utf-8'
-            return response
-        except requests.RequestException as exc:
-            raise ServiceError('BioMart request failed') from exc
+            yield response
+        finally:
+            response.close()
+            self.metrics.append({'method': method, 'status': response.status_code,
+                'seconds': time.monotonic() - started, 'retry': False,
+                'workers': self.effective_workers})
+            with self._condition:
+                self._active -= 1
+                self._condition.notify_all()
+
+    def map(self, function, items):
+        """Bound pending work; worker results should be persisted paths, not frames."""
+        iterator = iter(items)
+        with ThreadPoolExecutor(max_workers=self.config.max_workers) as executor:
+            pending = set()
+            exhausted = False
+            while pending or not exhausted:
+                while not exhausted and len(pending) < 2 * self.config.max_workers:
+                    try:
+                        pending.add(executor.submit(function, next(iterator)))
+                    except StopIteration:
+                        exhausted = True
+                if pending:
+                    done, pending = wait(pending, return_when=FIRST_COMPLETED)
+                    for future in done:
+                        yield future.result()
 
     def metadata(self):
         if self._metadata is not None:
