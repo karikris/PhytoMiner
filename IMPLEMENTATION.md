@@ -152,3 +152,14 @@ transcript counts and quoted-path tests plus cumulative suite PASS.
 
 5.2 pre-commit handshake caught DuckDB 2.0 removal of relation.fetchone();
 verified upstream and changed examples/tests to fetchall(). Cumulative rerun PASS.
+
+## 5.3 Lazy-import trial
+Previous handshake: DuckDB-views task commit (git log). GitHits CPython v3.15.2
+Doc/whatsnew/3.15.rst:179-240 confirms first-use failures and isolated global
+mode. Explicit module-scope lazy imports; transport/Arrow resolve before worker
+dispatch. Opening a dataset uses Arrow to validate Parquet metadata; SQL access
+then loads DuckDB and scanning loads Polars. Package/API imports load none of
+these engines. Fresh-process tests cover boundaries, concurrent first use,
+deferred exceptions and isolated global mode. Benchmark measures import, first
+use, total time and Python allocation peak (not total native RSS).
+Acceptance: cumulative suite and benchmark PASS.

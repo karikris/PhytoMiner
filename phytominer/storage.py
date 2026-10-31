@@ -58,6 +58,8 @@ def write_batches(path, columns, batches):
 
 class RequestCache:
     def __init__(self, root, refresh=False):
+        pa.schema([])  # Fail before worker dispatch if the columnar runtime is unavailable.
+        pq.ParquetWriter
         self.refresh = refresh
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)

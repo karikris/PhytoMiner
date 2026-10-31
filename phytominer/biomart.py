@@ -109,6 +109,7 @@ class BioMartClient:
 
     def map(self, function, items):
         """Bound pending work; worker results should be persisted paths, not frames."""
+        requests.Session  # Resolve deferred transport imports before workers start.
         iterator = iter(items)
         with ThreadPoolExecutor(max_workers=self.config.max_workers) as executor:
             pending = set()
