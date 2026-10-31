@@ -4,6 +4,7 @@ import os
 import uuid
 from pathlib import Path
 from datetime import datetime, timezone
+lazy import duckdb
 lazy import polars as pl
 lazy import pyarrow.parquet as pq
 from .storage import atomic_json, checksum, SCHEMA_VERSION
@@ -67,3 +68,14 @@ class HomologDataset:
                 pl.struct('source_organism_id','source_gene_name').n_unique().alias('query_genes'),
                 pl.len().alias('reported_edges'),
             ).sort('target_organism_id','target_organism_name','relationship')
+
+    def connect(self, database=':memory:'):
+        """Return a caller-owned DuckDB connection with Parquet-backed views."""
+        connection = duckdb.connect(str(database))
+        try:
+            for name, record in self.manifest['tables'].items():
+                connection.read_parquet(str((self.root / record['file']).resolve())).create_view(name, replace=True)
+        except Exception:
+            connection.close()
+            raise
+        return connection

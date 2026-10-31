@@ -142,3 +142,13 @@ Previous handshake: b080c9d. GitHits polars@2.1.0 group_by/agg/struct/n_unique
 API evidence checked. summary() is lazy and counts unique edges, query genes and
 target genes without joining labels/transcripts. Acceptance: lazy result and
 scientific-grain regression plus cumulative suite PASS.
+
+## 5.2 DuckDB views
+Previous handshake: lazy-summary commit (git log). GitHits duckdb@2.0.0
+duckdb/_relation.py:2836-2842 verifies relation.create_view(name, replace=True).
+Use relation APIs instead of interpolating file paths in SQL. Connection is
+caller-owned; Parquet remains canonical. Acceptance: SQL/Polars count parity,
+transcript counts and quoted-path tests plus cumulative suite PASS.
+
+5.2 pre-commit handshake caught DuckDB 2.0 removal of relation.fetchone();
+verified upstream and changed examples/tests to fetchall(). Cumulative rerun PASS.
