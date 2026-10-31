@@ -429,3 +429,10 @@ Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake 
 ## 1.0.2 task 4.2
 Previous handshake: fad1e4b. GitHits requests 2.34.2 timeout/stream contracts reviewed. Interruptible waits and stream checkpoints preserve raw cache and previous publications.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 1.0.2 Phase 3 gate
+Catalog, reusable identity mappings and unique seed outcomes PASS; no push.
+
+## 1.0.2 task 4.3
+Previous handshake: ffd9c94. GitHits CPython weak references and conditions reviewed. Most restrictive live-client settings coordinate per process, while sessions and separate endpoints stay independent. Phase 4 gates include limits and cancellation.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.

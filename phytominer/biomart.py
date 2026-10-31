@@ -1,5 +1,6 @@
 """BioMart metadata and XML adapter. External field names stay in this module."""
 
+from .scheduler import register
 from typing import Any
 import hashlib
 import json
@@ -28,13 +29,44 @@ class BioMartClient:
         self._metadata = None
         self._sessions = []
         self._local = threading.local()
-        self._condition = threading.Condition()
-        self._active = 0
-        self._next_start = 0.0
-        self._cooldown = 0.0
-        self.effective_workers = self.config.max_workers
+        self._scheduler = register(self)
+        self._condition = self._scheduler.condition
+        self._closed = False
         self.metrics = []
         self.run: Any = None
+
+    @property
+    def _active(self):
+        return self._scheduler.active
+
+    @_active.setter
+    def _active(self, value):
+        self._scheduler.active = value
+
+    @property
+    def _next_start(self):
+        return self._scheduler.next_start
+
+    @_next_start.setter
+    def _next_start(self, value):
+        self._scheduler.next_start = value
+
+    @property
+    def _cooldown(self):
+        return self._scheduler.cooldown
+
+    @_cooldown.setter
+    def _cooldown(self, value):
+        self._scheduler.cooldown = value
+
+    @property
+    def effective_workers(self):
+        return self._scheduler.workers
+
+    @effective_workers.setter
+    def effective_workers(self, value):
+        if value == 1:
+            self._scheduler.serial = True
 
     def __enter__(self):
         return self
@@ -46,8 +78,14 @@ class BioMartClient:
         for session in self._sessions:
             session.close()
         self._sessions.clear()
+        self._closed = True
+        with self._condition:
+            self._scheduler.clients.discard(self)
+            self._condition.notify_all()
 
     def _session(self):
+        if self._closed:
+            raise ValidationError("Client is closed")
         if not hasattr(self._local, "session"):
             self._local.session = requests.Session()
             self._sessions.append(self._local.session)
@@ -65,11 +103,11 @@ class BioMartClient:
                     delay = max(self._next_start, self._cooldown) - time.monotonic()
                     if self._active < self.effective_workers and delay <= 0:
                         self._active += 1
-                        self._next_start = (
-                            time.monotonic() + 1 / self.config.requests_per_second
-                        )
+                        self._next_start = time.monotonic() + 1 / self._scheduler.rate
                         break
-                    self._condition.wait(max(0.001, delay) if delay > 0 else 0.05)
+                    self._condition.wait(
+                        min(0.05, max(0.001, delay)) if delay > 0 else 0.05
+                    )
             started = time.monotonic()
             try:
                 if self.run is not None:
