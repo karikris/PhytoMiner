@@ -95,6 +95,7 @@ def join_annotations(
                 parent={
                     name: record["sha256"]
                     for name, record in sorted(dataset.manifest["tables"].items())
+                    if name not in ("retrieval_events", "relationship_evidence")
                 },
                 options={
                     "format": path.suffix,

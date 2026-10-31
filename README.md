@@ -113,3 +113,7 @@ organisms; `target_organisms=[]` retrieves no relationships and skips ortholog
 requests while retaining seed feature enrichment. Selections are normalized once,
 so duplicate or reordered selections resume equivalently. Processing-contract
 changes rebuild published results from compatible validated raw checkpoints.
+
+See [operational contracts](docs/OPERATIONS.md) for schema 3, organism resolution,
+seed outcomes, limits/cancellation, traversal resume, annotation normalization,
+verification modes, shared scheduling, and reader-safe cleanup.

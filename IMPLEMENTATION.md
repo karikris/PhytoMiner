@@ -463,3 +463,7 @@ Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake 
 ## 1.0.2 task 7.1
 Previous handshake: c958b65. GitHits Hypothesis 6.170.14 settings verified. Reproducible generated graphs cover cycles roots missing features and reference traversal; cross-process reader pinning is exercised.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 1.0.2 task 7.2
+Previous handshake: 2d12189. GitHits Polars 2.1.0 scan/sink APIs rechecked. Example fixtures now assert exact Arabidopsis-to-Sorghum evidence, meaningful SQL counts and offline behavior.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
