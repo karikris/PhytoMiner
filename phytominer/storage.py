@@ -77,6 +77,7 @@ class RequestCache:
         )  # Fail before worker dispatch if the columnar runtime is unavailable.
         pq.ParquetWriter
         self.used_paths = set()
+        self.accessed_paths = []
         self.refresh = refresh
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
@@ -200,5 +201,6 @@ class RequestCache:
         return self._used([self.root / part["file"] for part in parts])
 
     def _used(self, paths):
+        self.accessed_paths.extend(paths)
         self.used_paths.update(paths)
         return paths

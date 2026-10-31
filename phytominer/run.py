@@ -79,6 +79,9 @@ def run_context(root, client, callback=None):
     except BaseException as exc:
         run.status = "stopped"
         run.reason = type(exc).__name__
+        for seed in run.outcomes:
+            if seed["status"] == "not_processed":
+                seed["status"] = "failed"
         raise
     finally:
         run.save()

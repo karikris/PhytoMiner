@@ -2,6 +2,7 @@
 
 from dataclasses import asdict
 from pathlib import Path
+from .outcomes import write_outcomes
 from .evidence import write_evidence
 from .run import run_context
 from .contracts import Seeds, Targets
@@ -59,6 +60,14 @@ def fetch_homologs(
     client = client or BioMartClient()
     try:
         with _run_lock(root), run_context(root, client, progress) as run:
+            run.outcomes = [
+                {
+                    "organism_id": s.organism_id,
+                    "gene_name": s.gene_name,
+                    "status": "not_processed",
+                }
+                for s in seed_records
+            ]
             cache = RequestCache(root / "requests", refresh=refresh)
             with run.stage("metadata"):
                 fingerprint = cache.metadata(client, refresh)
@@ -155,6 +164,7 @@ def fetch_homologs(
                     how="anti",
                 ),
             )
+            write_outcomes(writer, run, seed_frame, features, edges)
             write_evidence(writer, cache, client, edges)
             edges = _resolution_status(edges, features)
             writer.write("relationships", edges.sort(TABLES["relationships"]))
@@ -264,6 +274,7 @@ def fetch_features(
                     how="anti",
                 ),
             )
+            write_outcomes(writer, run, wanted, features)
             write_evidence(writer, cache, client)
             return writer.finish(
                 metadata_fingerprint=fingerprint, metrics=client.metrics
