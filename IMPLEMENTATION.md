@@ -163,3 +163,17 @@ these engines. Fresh-process tests cover boundaries, concurrent first use,
 deferred exceptions and isolated global mode. Benchmark measures import, first
 use, total time and Python allocation peak (not total native RSS).
 Acceptance: cumulative suite and benchmark PASS.
+
+## Phase 5 remote handshake
+c7fc527: run 41177526286 PASS on all three platforms. Fresh-process import
+benchmark (median of three): lazy import 0.000208s, first analytics use 0.349935s,
+total 0.350226s; eager harness import 0.425372s, first use 0.020374s, total
+0.445756s. Harness eagerly imports requests too; this is a scenario comparison,
+not an isolated causal speedup claim. Python allocation peaks 24.8/30.3 MB.
+
+## 6.1 Documentation and examples
+Previous handshake: c7fc527. GitHits DuckDB 2.0 relation.create_view/fetchall and
+Polars 2.1 scan/sink APIs rechecked. Added migration guide and executable example
+with fixture injection. Docs explicitly describe unresolved IDs, traversal depth,
+cache refresh, lock recovery and conservative concurrency. Acceptance: executable
+example and cumulative suite PASS; no live access in ordinary tests.
