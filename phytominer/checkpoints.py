@@ -44,7 +44,13 @@ class TraversalCheckpoint:
     def save(
         self, depth, frontier, visited, queried, edges, features, provenance, used_paths
     ):
-        files = [*edges, *features, *provenance]
+        files = [
+            *edges,
+            *features,
+            *provenance,
+            *used_paths,
+            *(p.with_suffix(".json") for p in used_paths),
+        ]
         state = {
             "depth": depth,
             "frontier": [

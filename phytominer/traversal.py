@@ -48,6 +48,14 @@ def _discover(
         needed = set().union(*frontier.values()) - queried
         if needed:
             raw = raw_fetch(client, cache, _jobs(needed, client.config.batch_size))
+            if raw is not None and targets is not None:
+                catalog = client.catalog()
+                allowed_ids = {catalog.resolve(value) for value in targets}
+                raw = raw.filter(
+                    pl.col("ortholog__dm_ortholog_organism_name").is_in(
+                        catalog.names(allowed_ids)
+                    )
+                )
             edges, features = (
                 resolver(client, cache, raw, scratch)
                 if raw is not None
