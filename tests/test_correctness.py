@@ -156,3 +156,32 @@ def test_resolution_status_preserves_both_sides(tmp_path, missing, source_status
     assert result.manifest['unresolved_identity_rows'] == expected
     assert result.scan('unresolved_relationships').collect().height == expected
     assert result.scan('provenance').collect().height >= 1
+
+
+def test_schema_one_still_opens_without_fabricated_statuses(tmp_path):
+    from phytominer.models import TABLES_V1
+    from phytominer.storage import write_batches, atomic_json
+    from phytominer.dataset import HomologDataset
+    columns = TABLES_V1['relationships']
+    values = ['1','org1','a','2','org2','b','group','one-to-one']
+    record = write_batches(tmp_path/'old.parquet', columns, [[dict(zip(columns, values))]])
+    atomic_json(tmp_path/'manifest.json', {'schema_version':1, 'status':'complete', 'identity':'old',
+        'tables':{'relationships':{'file':'old.parquet', 'rows':record['rows'], 'sha256':record['sha256']}}})
+    dataset = HomologDataset(tmp_path)
+    assert dataset.scan('relationships').collect_schema().names() == list(columns)
+    assert dataset.summary().collect()['reported_edges'].to_list() == [1]
+    with dataset.connect() as connection:
+        assert connection.sql('select count(*) from relationships').fetchall() == [(1,)]
+
+
+@pytest.mark.parametrize('workers', [1,2,4])
+def test_schema_two_deterministic_missing_evidence(tmp_path, workers):
+    from phytominer import ClientConfig
+    result = fetch_homologs([Seed('1','a','X'),Seed('1','a','Y'),Seed('2','b')],
+        target_organisms=['org1','org2'], expansion_depth=3, output_dir=tmp_path,
+        client=MissingFeatures({'org1'}, ClientConfig(max_workers=workers)))
+    assert result.manifest['schema_version'] == 2
+    assert result.scan('relationships').collect().height == 2
+    assert result.scan('provenance').collect().height == 3
+    assert result.manifest['unresolved_identity_rows'] == 2
+    assert result.scan('seeds').collect().height == 3

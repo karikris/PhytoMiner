@@ -9,7 +9,7 @@ lazy import pyarrow as pa
 lazy import pyarrow.parquet as pq
 from .models import ServiceError
 
-SCHEMA_VERSION = 1
+REQUEST_SCHEMA_VERSION = 1
 
 def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
@@ -103,7 +103,7 @@ class RequestCache:
         refresh = refresh or self.refresh
         xml, columns = client.build_query(page, genes, organism_id)
         key = digest({'xml': xml, 'endpoint': client.config.endpoint,
-                      'metadata': client.metadata_fingerprint, 'schema_version': SCHEMA_VERSION})
+                      'metadata': client.metadata_fingerprint, 'schema_version': REQUEST_SCHEMA_VERSION})
         manifest = self.root / (key + '.json')
         if manifest.exists() and not refresh:
             try:

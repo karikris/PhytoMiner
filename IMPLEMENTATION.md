@@ -274,3 +274,19 @@ missing_feature, computed against completed feature evidence. Known request IDs
 remain populated; unresolved targets keep null IDs. Both sides contribute to the
 unresolved evidence table/count. Benchmark declares its synthetic resolved status.
 Source/target/both missing regressions and cumulative suite PASS.
+
+## Task 2.3 — Schema compatibility
+Previous handshake: Task 2.2 commit. GitHits pyarrow@26.0.0 ParquetFile schema_arrow
+and metadata row-count interfaces checked. Dataset schema 2 writes diagnostic
+columns; schema 1 remains readable without invented statuses. Raw request format
+stays version 1 so validated raw checkpoints retain their original identity.
+Old schema SQL/Polars access and multi-root/label/cycle tests at workers 1/2/4 PASS.
+
+## Phase 2 handshake
+All tasks and cumulative suite PASS. Missing source/target/both feature evidence
+is retained; ambiguous/conflicting identities fail. Schema 1 read compatibility
+and schema 2 writes verified. No push; proceed to private dataset publication.
+
+Phase 2 pre-commit check corrected a regression expectation: unresolved target
+IDs stop traversal, so the missing-source multi-root fixture has three provenance
+rows, not four. Phase 3 changes held aside until the phase gate passes.

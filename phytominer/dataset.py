@@ -7,8 +7,10 @@ from datetime import datetime, timezone
 lazy import duckdb
 lazy import polars as pl
 lazy import pyarrow.parquet as pq
-from .storage import atomic_json, checksum, SCHEMA_VERSION
-from .models import TABLES, IncompleteDatasetError, ValidationError
+from .storage import atomic_json, checksum
+from .models import TABLES, TABLES_V1, IncompleteDatasetError, ValidationError
+
+DATASET_SCHEMA_VERSION = 2
 
 class DatasetWriter:
     def __init__(self, root, identity):
@@ -17,7 +19,7 @@ class DatasetWriter:
         self.directory = self.root / 'tables' / self.generation
         self.directory.mkdir(parents=True, exist_ok=True)
         from . import __version__
-        self.manifest = {'package_version': __version__, 'schema_version': SCHEMA_VERSION, 'status': 'incomplete',
+        self.manifest = {'package_version': __version__, 'schema_version': DATASET_SCHEMA_VERSION, 'status': 'incomplete',
             'identity': identity, 'tables': {}, 'created_at': datetime.now(timezone.utc).isoformat()}
         atomic_json(self.root / 'manifest.json', self.manifest)
 
@@ -45,14 +47,15 @@ class HomologDataset:
         self.root = Path(root)
         try:
             self.manifest = json.loads((self.root / 'manifest.json').read_text())
-            if self.manifest['status'] != 'complete' or self.manifest['schema_version'] != SCHEMA_VERSION:
+            if self.manifest['status'] != 'complete' or self.manifest['schema_version'] not in (1, DATASET_SCHEMA_VERSION):
                 raise ValueError('Incomplete or unsupported manifest')
+            schemas = TABLES_V1 if self.manifest['schema_version'] == 1 else TABLES
             for name, record in self.manifest['tables'].items():
                 path = (self.root / record['file']).resolve()
                 if not path.is_relative_to(self.root.resolve()) or checksum(path) != record['sha256']:
                     raise ValueError('Invalid dataset file')
                 file = pq.ParquetFile(path)
-                if name in TABLES and file.schema_arrow.names != list(TABLES[name]):
+                if name in schemas and file.schema_arrow.names != list(schemas[name]):
                     raise ValueError('Invalid dataset table schema')
                 if file.metadata.num_rows != record['rows']:
                     raise ValueError('Invalid dataset row count')
