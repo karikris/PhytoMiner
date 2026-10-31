@@ -33,6 +33,8 @@ class RunContext:
             "http_attempts": 0,
             "bytes": 0,
             "rows": 0,
+            "unresolved_identity_rows": 0,
+            "identity_cache_hits": 0,
         }
         self.timings = {
             name: 0.0
@@ -83,6 +85,10 @@ class RunContext:
             and len(self.genes) > self.limits.max_genes
         ):
             raise BudgetExceededError("max_genes", len(self.genes))
+
+    def increment(self, name):
+        with self.guard:
+            self.counters[name] = self.counters.get(name, 0) + 1
 
     def before_http(self):
         with self.guard:
@@ -146,10 +152,13 @@ class RunContext:
 
 
 @contextmanager
-def run_context(root, client, callback=None, limits=None, cancel=None):
+def run_context(
+    root, client, callback=None, limits=None, cancel=None, seed_outcomes=()
+):
     if client.run is not None:
         raise ValidationError("Client already has an active run")
     run = RunContext(root, client, callback, limits, cancel)
+    run.outcomes = list(seed_outcomes)
     token = CURRENT_RUN.set(run)
     client.run = run
     try:

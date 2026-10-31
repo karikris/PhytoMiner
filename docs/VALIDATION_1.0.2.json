@@ -1,0 +1,125 @@
+{
+  "version": "1.0.2",
+  "python": "3.15.2",
+  "locked_tests": 124,
+  "minimum_tests": 124,
+  "static_checks": [
+    "ruff",
+    "pyright"
+  ],
+  "typed_wheel": true,
+  "live_catalog": {
+    "entries": 472,
+    "Athaliana_TAIR10": "167",
+    "Sbicolor_v3.1.1": "454"
+  },
+  "dataset_low": {
+    "rows": 1000000,
+    "scenario": "low",
+    "elapsed_seconds": 2.0526209010131424,
+    "parquet_bytes": 452470,
+    "peak_process_rss_bytes": 716787712,
+    "network_requests": 0,
+    "sql_polars_match": true,
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+    "python": "3.15.2"
+  },
+  "dataset_high": {
+    "rows": 1000000,
+    "scenario": "high",
+    "elapsed_seconds": 2.03039766800066,
+    "parquet_bytes": 941575,
+    "peak_process_rss_bytes": 593985536,
+    "network_requests": 0,
+    "sql_polars_match": true,
+    "platform": "Linux-6.6.114.1-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+    "python": "3.15.2"
+  },
+  "pipeline": {
+    "initial": {
+      "seconds": 1.739128310000524,
+      "query_calls": 16,
+      "metrics": {
+        "bytes": 2804,
+        "cache_hits": 0,
+        "cache_misses": 16,
+        "http_attempts": 0,
+        "identity_cache_hits": 9,
+        "rows": 84,
+        "run_id": "e3d630584ab74964aba325f7cd343816",
+        "stages": {
+          "fetch": 0.04799097096838523,
+          "metadata": 0.000804908006102778,
+          "persist": 0.06048732802446466,
+          "publication": 0.007322196994209662,
+          "resolution": 0.72812521099695,
+          "traversal": 1.5476625680021243
+        },
+        "unresolved_identity_rows": 13
+      }
+    },
+    "resume": {
+      "seconds": 0.028127850993769243,
+      "query_calls": 0,
+      "metrics": {
+        "bytes": 0,
+        "cache_hits": 0,
+        "cache_misses": 0,
+        "http_attempts": 0,
+        "identity_cache_hits": 0,
+        "rows": 0,
+        "run_id": "ba1ef94285b24420a0b5a3420eb4dfb3",
+        "stages": {
+          "fetch": 0.0,
+          "metadata": 0.0007728479977231473,
+          "persist": 0.0,
+          "publication": 0.0,
+          "resolution": 0.0,
+          "traversal": 0.0
+        },
+        "unresolved_identity_rows": 0
+      }
+    },
+    "refresh": {
+      "seconds": 1.574988475011196,
+      "query_calls": 16,
+      "metrics": {
+        "bytes": 3268,
+        "cache_hits": 0,
+        "cache_misses": 16,
+        "http_attempts": 0,
+        "identity_cache_hits": 0,
+        "rows": 103,
+        "run_id": "a69d3e1d13a5436e857674df4650511e",
+        "stages": {
+          "fetch": 0.021267687989166006,
+          "metadata": 0.0005984800081932917,
+          "persist": 0.062448496028082445,
+          "publication": 0.0065408290101913735,
+          "resolution": 0.6842586830025539,
+          "traversal": 1.4730706850095885
+        },
+        "unresolved_identity_rows": 13
+      }
+    },
+    "open_seconds": {
+      "full": 0.006429988003219478,
+      "metadata": 0.0009098649898078293
+    },
+    "interrupted_resume_queries": 13,
+    "parquet_bytes": 162448,
+    "peak_process_rss_bytes": 385572864,
+    "nodes": 100,
+    "fanout": 5,
+    "missing_features": 15,
+    "expected_relationships": 55,
+    "parse_seconds": 0.012109997915104032,
+    "network_requests": 0
+  },
+  "limits": [
+    "Offline timings do not establish remote throughput.",
+    "Native RSS is platform dependent and unavailable on Windows.",
+    "Stage timings are nested and must not be summed.",
+    "Measurements captured during the final development gate; exact-SHA CI repeats validation."
+  ]
+}

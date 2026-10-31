@@ -147,12 +147,12 @@ class RequestCache:
                 record = json.loads(manifest.read_text())
                 if self.valid(record, columns):
                     if active_run is not None:
-                        active_run.counters["cache_hits"] += 1
+                        active_run.increment("cache_hits")
                     return self._used([self.root / p["file"] for p in record["parts"]])
             except ValueError, KeyError:
                 pass
         if active_run is not None:
-            active_run.counters["cache_misses"] += 1
+            active_run.increment("cache_misses")
         path = self.root / (key + ".parquet")
         result = {}
         try:

@@ -64,7 +64,21 @@ def fetch_homologs(
     try:
         with (
             _run_lock(root),
-            run_context(root, client, progress, limits, cancel) as run,
+            run_context(
+                root,
+                client,
+                progress,
+                limits,
+                cancel,
+                seed_outcomes=[
+                    {
+                        "organism_id": s.organism_id,
+                        "gene_name": s.gene_name,
+                        "status": "not_processed",
+                    }
+                    for s in seed_records
+                ],
+            ) as run,
         ):
             run.outcomes = [
                 {
@@ -188,6 +202,9 @@ def fetch_homologs(
                 | (pl.col("target_resolution_status") == "missing_feature")
             )
             writer.write("unresolved_relationships", unresolved)
+            run.counters["unresolved_identity_rows"] = writer.manifest["tables"][
+                "unresolved_relationships"
+            ]["rows"]
             return writer.finish(
                 metadata_fingerprint=fingerprint,
                 endpoint=client.config.endpoint,
@@ -222,7 +239,17 @@ def fetch_features(
     try:
         with (
             _run_lock(root),
-            run_context(root, client, progress, limits, cancel) as run,
+            run_context(
+                root,
+                client,
+                progress,
+                limits,
+                cancel,
+                seed_outcomes=[
+                    {"organism_id": o, "gene_name": g, "status": "not_processed"}
+                    for o, g in gene_keys
+                ],
+            ) as run,
         ):
             run.outcomes = [
                 {"organism_id": o, "gene_name": g, "status": "not_processed"}

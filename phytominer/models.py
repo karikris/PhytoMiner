@@ -69,7 +69,7 @@ class ClientConfig:
         ):
             raise ValidationError("Workers, batch size and attempts must be integers")
         if not all(
-            isfinite(v)
+            isinstance(v, (int, float)) and not isinstance(v, bool) and isfinite(v)
             for v in (self.requests_per_second, self.connect_timeout, self.read_timeout)
         ):
             raise ValidationError("Rates and timeouts must be finite")
@@ -142,6 +142,26 @@ TABLES_V1 = dict(TABLES)
 TABLES["relationships"] = RELATIONSHIP_COLUMNS + (
     "source_resolution_status",
     "target_resolution_status",
+)
+
+
+TABLES_V2 = dict(TABLES)
+TABLES.update(
+    {
+        "unmatched_genes": TABLES["genes"],
+        "unresolved_relationships": TABLES["relationships"],
+        "retrieval_events": (
+            "event_id",
+            "query_hash",
+            "retrieved_at",
+            "endpoint",
+            "dataset",
+            "metadata_fingerprint",
+            "raw_file",
+        ),
+        "relationship_evidence": RELATIONSHIP_COLUMNS + ("event_id",),
+        "seed_outcomes": ("organism_id", "gene_name", "status", "feature_status"),
+    }
 )
 
 

@@ -40,7 +40,11 @@ def _discover_impl(
         )
         start_depth = restored["depth"] + 1
         if client.run is not None:
-            client.run.track_genes(set().union(*visited.values()))
+            client.run.track_genes(
+                tuple(n)
+                for n in restored.get("discovered_genes", [])
+                or set().union(*visited.values())
+            )
             client.run.emit("traversal_resumed", completed_depth=restored["depth"])
     for depth in range(start_depth, expansion_depth + 2):
         if client.run is not None:

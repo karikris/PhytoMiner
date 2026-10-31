@@ -35,3 +35,5 @@ Publication is idempotent by stable hidden markers. Reconcile existing open and
 closed issues before creating; record URLs immediately in a local ignored receipt.
 Do not assign users or create milestones. B10 is only partially addressed by the
 current schema work. Final tracking issue links every item.
+
+All 23 remaining items are implemented for 1.0.2; see [acceptance map](ACCEPTANCE_1.0.2.md). GitHub closures follow the final exact-SHA CI gate. The JSON payloads retain the original 1.0.1 review snapshot.

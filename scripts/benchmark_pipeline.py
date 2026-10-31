@@ -23,11 +23,12 @@ class ParsedClient(GraphClient):
             self.metrics.append({'rows':len(batch),'response_bytes':sum(len(s.encode())+1 for s in lines),'complete':True,
                                  'query_hash':digest([page,list(genes),organism_id])})
 
-def run_pipeline(nodes=12,fanout=2):
+def run_pipeline(nodes=12,fanout=2,missing_every=0):
     edges={i:{(i+j+1)%nodes for j in range(fanout)} for i in range(nodes)}
     roots={0,min(1,nodes-1)};depth=2
-    expected,_=reference(edges,roots,set(range(nodes)),depth,set())
-    c=ParsedClient(nodes,edges);report={}
+    missing={i for i in range(nodes) if missing_every and i%missing_every==0}
+    expected,_=reference(edges,roots,set(range(nodes)),depth,missing)
+    c=ParsedClient(nodes,edges,missing);report={}
     with tempfile.TemporaryDirectory() as tmp:
         root=Path(tmp)/'run'
         args=dict(target_organisms=[str(i+1) for i in range(nodes)],expansion_depth=depth,output_dir=root,client=c)
@@ -57,9 +58,14 @@ def run_pipeline(nodes=12,fanout=2):
             assert resumed.scan('relationships').collect().height==len(expected)
         report['interrupted_resume_queries']=len(c.calls)-calls
         report['parquet_bytes']=sum(p.stat().st_size for p in root.rglob('*.parquet'))
-    report.update(nodes=nodes,fanout=fanout,expected_relationships=len(expected),parse_seconds=c.parse_seconds,network_requests=0)
+    try:
+        import resource,platform
+        report['peak_process_rss_bytes']=resource.getrusage(resource.RUSAGE_SELF).ru_maxrss*(1 if platform.system()=='Darwin' else 1024)
+    except ImportError:report['peak_process_rss_bytes']=None
+    report.update(nodes=nodes,fanout=fanout,missing_features=len(missing),expected_relationships=len(expected),parse_seconds=c.parse_seconds,network_requests=0)
     return report
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser();parser.add_argument('--nodes',type=int,default=12);parser.add_argument('--fanout',type=int,default=2)
-    args=parser.parse_args();print(json.dumps(run_pipeline(args.nodes,args.fanout),indent=2))
+    parser.add_argument("--missing-every",type=int,default=0)
+    args=parser.parse_args();print(json.dumps(run_pipeline(args.nodes,args.fanout,args.missing_every),indent=2))

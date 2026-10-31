@@ -1,19 +1,7 @@
 """Versioned dataset kinds and scientific table grains."""
 
-from . import evidence
-from .models import TABLES
+from .models import TABLES, TABLES_V2 as TABLES_V2
 
-TABLES_V2 = {
-    name: columns
-    for name, columns in TABLES.items()
-    if name not in ("retrieval_events", "relationship_evidence")
-}
-TABLES.update(
-    {
-        "unmatched_genes": TABLES["genes"],
-        "unresolved_relationships": TABLES["relationships"],
-    }
-)
 REQUIRED = {
     "collection": set(),
     "homologs": {
@@ -27,6 +15,7 @@ REQUIRED = {
         "unresolved_relationships",
         "retrieval_events",
         "relationship_evidence",
+        "seed_outcomes",
     },
     "features": {
         "genes",
@@ -34,6 +23,7 @@ REQUIRED = {
         "organisms",
         "unmatched_genes",
         "retrieval_events",
+        "seed_outcomes",
     },
     "annotated": {"genes", "annotations", "annotated_genes"},
 }
@@ -44,9 +34,11 @@ NULLABLE = {
     "transcript_name",
     "pac_transcript_id",
 }
-TABLES["retrieval_events"] = evidence.EVENT_COLUMNS
 KEYS = {name: columns for name, columns in TABLES.items()}
 KEYS["genes"] = ("organism_id", "gene_name")
 KEYS["organisms"] = ("organism_id",)
 KEYS["annotations"] = KEYS["genes"]
 KEYS["annotated_genes"] = KEYS["genes"]
+
+KEYS["seed_outcomes"] = ("organism_id", "gene_name")
+KEYS["retrieval_events"] = ("event_id",)

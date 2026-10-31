@@ -1,14 +1,9 @@
 """One scientific outcome per organism-qualified seed."""
 
 from .models import TABLES
-from .schemas import REQUIRED, KEYS
 lazy import polars as pl
 
-COLUMNS = ("organism_id", "gene_name", "status", "feature_status")
-TABLES["seed_outcomes"] = COLUMNS
-KEYS["seed_outcomes"] = ("organism_id", "gene_name")
-REQUIRED["homologs"].add("seed_outcomes")
-REQUIRED["features"].add("seed_outcomes")
+COLUMNS = TABLES["seed_outcomes"]
 
 
 def write_outcomes(writer, run, seeds, features, edges=None):

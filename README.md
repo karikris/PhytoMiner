@@ -1,7 +1,7 @@
 # PhytoMiner
 
 Phytozome BioMart XML retrieval with Polars, Parquet and DuckDB, on **Python 3.15+**.
-Version 1.0.1 provides a new dataset API. See [migration notes](docs/MIGRATION.md).
+Version 1.0.2 provides a new dataset API. See [migration notes](docs/MIGRATION.md).
 
 ```bash
 pip install phytominer

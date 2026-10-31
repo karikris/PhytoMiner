@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.2
+
+- Resolve organisms from cached configuration metadata and reuse verified identities.
+- Add schema-3 kinds, seed outcomes, persistent retrieval evidence and per-run diagnostics.
+- Add optional budgets, cancellation, shared endpoint scheduling and level resume.
+- Validate annotation interpretation and strengthen derived content identity.
+- Add verification modes, reader leases, cache inventory and explicit safe cleanup.
+- Add typing/static checks, minimum-dependency CI, generated invariants and realistic benchmarks.
+
 ## 1.0.1
 
 - Distinguish unrestricted and empty target filters, including cached results.

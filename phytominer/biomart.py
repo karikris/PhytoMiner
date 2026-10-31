@@ -159,6 +159,8 @@ class BioMartClient:
                         "retry": True,
                     }
                 )
+                if self.run is not None:
+                    self.run.check()
                 if attempt + 1 == self.config.attempts:
                     error = (
                         BatchSizeError

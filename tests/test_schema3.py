@@ -12,3 +12,8 @@ def test_duplicate_keys_rejected(tmp_path):
     w=DatasetWriter(tmp_path,'identity')
     w.write('genes',pl.LazyFrame({'organism_id':['1','1'],'gene_name':['a','a']}))
     with pytest.raises(IncompleteDatasetError,match='Duplicate'):w.finish()
+
+def test_failed_seed_cannot_be_published(tmp_path):
+    w=DatasetWriter(tmp_path,'invalid-outcome')
+    w.write('seed_outcomes',pl.LazyFrame({'organism_id':['1'],'gene_name':['a'],'status':['failed'],'feature_status':['missing_feature']}))
+    with pytest.raises(IncompleteDatasetError,match='outcome'):w.finish()

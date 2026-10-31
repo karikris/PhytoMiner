@@ -21,6 +21,7 @@ class TraversalCheckpoint:
         )
         self.path = self.root / "traversal" / f"{key}.json"
         self.refresh = cache.refresh
+        self.run = client.run
 
     def load(self):
         if self.refresh:
@@ -53,6 +54,9 @@ class TraversalCheckpoint:
         ]
         state = {
             "depth": depth,
+            "discovered_genes": [list(n) for n in sorted(self.run.genes)]
+            if self.run is not None
+            else [],
             "frontier": [
                 [list(root), [list(n) for n in sorted(nodes)]]
                 for root, nodes in sorted(frontier.items())

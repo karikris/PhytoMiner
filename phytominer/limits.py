@@ -20,7 +20,10 @@ class RunLimits:
             ):
                 raise ValidationError(f"{name} must be a nonnegative integer")
         if self.max_seconds is not None and (
-            not isfinite(self.max_seconds) or self.max_seconds <= 0
+            isinstance(self.max_seconds, bool)
+            or not isinstance(self.max_seconds, (int, float))
+            or not isfinite(self.max_seconds)
+            or self.max_seconds <= 0
         ):
             raise ValidationError("max_seconds must be finite and positive")
 

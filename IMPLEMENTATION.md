@@ -471,3 +471,19 @@ Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake 
 ## 1.0.2 task 7.3
 Previous handshake: 5aa80f3. GitHits DuckDB 2.0 relations and Arrow/Polars APIs rechecked. Offline pipeline parses real TSV fixtures and reports isolated stages, queries, opening cost and zero-network resume.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 1.0.2 final local phase gate
+All seven phases PASS. Locked and minimum-direct suites: 124 tests. Ruff and
+Pyright pass. Built/installed wheel, py.typed marker and legacy audits pass.
+Million-row low/high scenarios and full XML pipeline (including missing features,
+refresh, interruption and zero-query resume) pass reference counts. Live metadata
+catalog maps 472 entries, TAIR10=167 and Sorghum v3.1.1=454. Final precommit
+review centralized all schema declarations so fresh-process validation is complete
+and fixed a checkpoint initialization error caught by the large benchmark.
+The final task also includes stream cancellation, private seed diagnostics and
+annotation schema regressions. See docs/ACCEPTANCE_1.0.2.md for the 23-task map.
+One push follows; close issues only after exact-SHA CI passes every job.
+
+## 1.0.2 task 7.4
+Previous handshake: aa4aaa9. GitHits Polars 2.1.0 sink/expression contracts reviewed. Low/high cardinality million-row checks, varied graph transcripts/missing features, minimum dependencies and operational acceptance map complete.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.

@@ -29,6 +29,8 @@ def lookup(cache, client, genes):
     for gene in genes:
         record = index.get(gene)
         if not cache.refresh and record and cache.valid(record, FEATURE_ATTRIBUTES):
+            if client.run is not None:
+                client.run.increment("identity_cache_hits")
             paths.update(cache.root / p["file"] for p in record["parts"])
         else:
             missing.append(gene)

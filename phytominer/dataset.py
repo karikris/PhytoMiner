@@ -58,6 +58,25 @@ def _validate_manifest(root, manifest, *, verify="full"):
                         )
                         if not valid_type:
                             raise ValueError("Invalid dataset column type")
+                if manifest["schema_version"] == 3 and name in (
+                    "annotations",
+                    "annotated_genes",
+                ):
+                    for key in ("organism_id", "gene_name"):
+                        if key not in file.schema_arrow.names or not (
+                            pa.types.is_string(file.schema_arrow.field(key).type)
+                            or pa.types.is_large_string(
+                                file.schema_arrow.field(key).type
+                            )
+                        ):
+                            raise ValueError("Invalid annotation key schema")
+                    if name == "annotated_genes" and (
+                        "annotation_match" not in file.schema_arrow.names
+                        or not pa.types.is_boolean(
+                            file.schema_arrow.field("annotation_match").type
+                        )
+                    ):
+                        raise ValueError("Invalid annotation match schema")
                 if file.metadata.num_rows != record["rows"]:
                     raise ValueError("Invalid dataset row count")
             if manifest["schema_version"] == 3 and verify == "full":
@@ -74,6 +93,15 @@ def _validate_manifest(root, manifest, *, verify="full"):
                         for column in required_columns:
                             if batch.column(column).null_count:
                                 raise ValueError("Null required dataset key or value")
+                        if name == "seed_outcomes":
+                            for row in batch.to_pylist():
+                                if row["status"] not in (
+                                    "matched",
+                                    "no_homologs",
+                                    "missing_gene",
+                                    "unresolved",
+                                ):
+                                    raise ValueError("Invalid published seed outcome")
                         if keys:
                             for row in batch.to_pylist():
                                 identity = hashlib.sha256(

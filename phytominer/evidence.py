@@ -6,17 +6,7 @@ from .storage import digest
 from .models import TABLES, RELATIONSHIP_COLUMNS
 lazy import polars as pl
 
-EVENT_COLUMNS = (
-    "event_id",
-    "query_hash",
-    "retrieved_at",
-    "endpoint",
-    "dataset",
-    "metadata_fingerprint",
-    "raw_file",
-)
-TABLES["retrieval_events"] = EVENT_COLUMNS
-TABLES["relationship_evidence"] = RELATIONSHIP_COLUMNS + ("event_id",)
+EVENT_COLUMNS = TABLES["retrieval_events"]
 
 
 def event_for(path, client):
