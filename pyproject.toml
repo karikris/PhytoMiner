@@ -19,14 +19,10 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Bio-Informatics"
 ]
 dependencies = [
-    "pandas",
     "polars>=2.1,<3",
     "duckdb>=2,<3",
     "pyarrow>=26,<27",
-    "intermine",
     "requests",
-    "seaborn",
-    "matplotlib",
 ]
 
 [project.urls]
@@ -34,7 +30,7 @@ dependencies = [
 "Bug Tracker" = "https://github.com/karikris/PhytoMiner/issues"
 
 [project.optional-dependencies]
-dev = ["pytest>=9.2,<10", "pytest-mock", "build>=1.6,<2"]
+dev = ["pytest>=9.2,<10", "build>=1.6,<2"]
 
 [tool.setuptools.packages.find]
 where = ["."]

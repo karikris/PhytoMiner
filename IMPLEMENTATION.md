@@ -15,3 +15,11 @@ Legacy dependencies are temporarily retained for baseline verification in this
 one task and removed in 1.2. Publishing automation is removed pending release.
 Acceptance: CPython 3.15.2 install and analytics imports available; existing nine
 baseline tests pass; wheel and sdist build. Task handshake PASS.
+
+## 1.2 Legacy removal
+Previous handshake: bc2a588 (nine baseline tests and build passed).
+GitHits: github:python/cpython@v3.15.2 Doc/reference/import.rst:391-401
+confirms sys.modules is observable import evidence. Removed all old runtime
+modules, tests and outdated review; no compatibility facade retained.
+Acceptance: replacement import/removal tests pass and dependency lock excludes
+the old backend and dataframe/plotting stack. Task handshake PASS.
