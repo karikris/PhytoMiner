@@ -57,3 +57,15 @@ bounded futures, shared start limiter, retry-after cooldown and serial downgrade
 Acceptance: local HTTP server verifies retry, rate, concurrency and terminal
 failures; cumulative tests PASS. BatchSizeError signals transactional splitting
 in the storage consumer rather than yielding duplicate retry data.
+
+## Phase 2 remote handshake
+81a1beb: run 41176606924 PASS on all three platforms. Live adapter ortholog
+query returned 585 rows. Global organism enumeration is slow and will not be
+used in workflows: resolve discovered names through bounded feature queries.
+
+## 3.1 Atomic persistence
+Previous handshake: 81a1beb. GitHits pyarrow@26.0.0
+pyarrow/parquet/core.py:1068-1151 confirms schema-bound ParquetWriter and
+compression. Bounded row groups, Zstandard and atomic promotion after producer
+completion. Acceptance: truncation never publishes; empty/null/string-ID typed
+round trips and cumulative suite PASS.
