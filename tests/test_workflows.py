@@ -65,3 +65,16 @@ def test_feature_retrieval_and_annotations(tmp_path):
     assert annotated.scan('annotations').collect().height==1
     annotation.write_text('organism_id\tgene_name\tsubunit\n1\ta\tX\n1\ta\tY\n')
     with pytest.raises(Exception,match='unique'): join_annotations(dataset,annotation)
+
+def test_unresolved_targets_preserve_reported_evidence(tmp_path):
+    class Stale(FixtureClient):
+        def query(self,page,genes=(),organism_id=None):
+            for batch in super().query(page,genes,organism_id):
+                if page != 'orthologs':
+                    batch=[row for row in batch if row['organism_name']!='org2']
+                yield batch
+    result=fetch_homologs([Seed('1','a')],target_organisms=['org2'],expansion_depth=2,output_dir=tmp_path,client=Stale())
+    edge=result.scan('relationships').collect().to_dicts()[0]
+    assert edge['target_organism_name']=='org2' and edge['target_organism_id'] is None
+    assert result.manifest['unresolved_identity_rows']==1
+    assert result.scan('provenance').collect().height==1

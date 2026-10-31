@@ -65,8 +65,6 @@ def _resolve(client, cache, raw, scratch):
     identities = features.select('organism_name','gene_name','organism_id').unique()
     if identities.group_by('organism_name','gene_name').len().filter(pl.col('len')>1).limit(1).collect().height:
         raise ServiceError('Ambiguous organism/gene identity in BioMart features')
-    if refs.join(identities, on=['organism_name','gene_name'], how='anti').limit(1).collect().height:
-        raise ServiceError('Reported homolog identifiers could not be resolved through BioMart features')
     edges = raw.rename(dict(zip(raw.collect_schema().names(),
         ['ortholog_group','source_gene_name','source_organism_name','target_gene_name','target_organism_name','relationship'])))
     for side in ('source','target'):
@@ -89,8 +87,7 @@ def _discover(client, cache, seeds, targets, expansion_depth, scratch):
             sources = pl.LazyFrame([{'source_organism_id':o,'source_gene_name':g} for o,g in sorted(needed)])
             edges = edges.join(sources,on=['source_organism_id','source_gene_name'],how='semi')
             if targets is not None:
-                allowed = features.filter(pl.col('organism_id').is_in(targets) | pl.col('organism_name').is_in(targets)).select(pl.col('organism_id').alias('target_organism_id')).unique()
-                edges = edges.join(allowed,on='target_organism_id',how='semi')
+                edges = edges.filter(pl.col('target_organism_id').is_in(targets) | pl.col('target_organism_name').is_in(targets))
             edge_path = scratch / f'edges-{depth}.parquet'
             feature_path = scratch / f'features-{depth}.parquet'
             edges.sink_parquet(edge_path); features.sink_parquet(feature_path)
@@ -109,7 +106,7 @@ def _discover(client, cache, seeds, targets, expansion_depth, scratch):
             for row in batch.to_pylist():
                 root=(row['root_organism_id'],row['root_gene_name'])
                 node=(row['target_organism_id'],row['target_gene_name'])
-                if node not in visited[root]:
+                if node[0] is not None and node not in visited[root]:
                     visited[root].add(node); next_frontier[root].add(node)
         frontier = next_frontier
         if not any(frontier.values()):
@@ -149,7 +146,7 @@ def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_di
             edges, features, provenance = _discover(client, cache, seeds, target_organisms, expansion_depth, writer.directory)
             writer.write('relationships',edges.sort(TABLES['relationships']))
             writer.write('provenance',provenance.select(TABLES['provenance']).sort(TABLES['provenance']))
-            genes = pl.concat([seed_frame.select('organism_id','gene_name'), edges.select(pl.col('target_organism_id').alias('organism_id'),pl.col('target_gene_name').alias('gene_name'))]).unique()
+            genes = pl.concat([seed_frame.select('organism_id','gene_name'), edges.select(pl.col('target_organism_id').alias('organism_id'),pl.col('target_gene_name').alias('gene_name'))]).filter(pl.col('organism_id').is_not_null()).unique()
             seed_jobs=(('features',batch,org) for _,batch,org in _jobs(((s.organism_id,s.gene_name) for s in seeds),client.config.batch_size))
             seed_features=_raw(client,cache,seed_jobs)
             if seed_features is not None:
@@ -159,7 +156,9 @@ def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_di
             writer.write('features',features.sort(TABLES['features']))
             writer.write('genes',genes.sort('organism_id','gene_name'))
             writer.write('organisms',features.select('organism_id','organism_name').unique().sort('organism_id'))
-            return writer.finish(metadata_fingerprint=fingerprint, endpoint=client.config.endpoint, metrics=client.metrics)
+            unresolved=edges.filter(pl.col('target_organism_id').is_null() | pl.col('source_organism_id').is_null())
+            writer.write('unresolved_relationships',unresolved)
+            return writer.finish(metadata_fingerprint=fingerprint, endpoint=client.config.endpoint, metrics=client.metrics, unresolved_identity_rows=writer.manifest['tables']['unresolved_relationships']['rows'])
     finally:
         if owned: client.close()
 

@@ -60,7 +60,7 @@ TABLES = {
     'seeds': ('organism_id', 'gene_name', 'label'),
     'organisms': ('organism_id', 'organism_name'),
     'genes': ('organism_id', 'gene_name'),
-    'relationships': ('source_organism_id', 'source_gene_name', 'target_organism_id', 'target_gene_name', 'ortholog_group', 'relationship'),
-    'provenance': ('root_organism_id', 'root_gene_name', 'source_organism_id', 'source_gene_name', 'target_organism_id', 'target_gene_name', 'depth'),
+    'relationships': ('source_organism_id', 'source_organism_name', 'source_gene_name', 'target_organism_id', 'target_organism_name', 'target_gene_name', 'ortholog_group', 'relationship'),
+    'provenance': ('root_organism_id', 'root_gene_name', 'source_organism_id', 'source_organism_name', 'source_gene_name', 'target_organism_id', 'target_organism_name', 'target_gene_name', 'depth'),
     'features': ('organism_id', 'organism_name', 'gene_name', 'pac_gene_id', 'transcript_name', 'pac_transcript_id'),
 }

@@ -121,3 +121,12 @@ Review found refresh should replace canonical request checkpoints rather than
 use a separate transient namespace. Corrected and added a regression test;
 cleaned exception/annotation handling. GitHits atomic replacement evidence from
 3.2 applies. Cumulative suite PASS; phase gate restarts on corrected SHA.
+
+## Phase 4 live-data corrective handshake
+Live AT1G01090 retrieval found five reported target genes missing from features
+among 586 distinct source/target references. Preserve reported organism names in
+relationships/provenance, leave unresolved IDs null, expose an explicit
+unresolved_relationships table and manifest count, and skip those nodes during
+expansion. Ambiguous mappings still fail. This evidence-driven adjustment avoids
+both data loss and invented IDs. Added a stale-target regression test. GitHits
+Polars left-join/null-preservation contracts apply. Cumulative suite PASS.
