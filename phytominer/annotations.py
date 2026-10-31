@@ -81,9 +81,21 @@ def join_annotations(
             root,
             _result_identity(
                 "annotations",
-                parent=dataset.manifest["identity"],
+                parent={
+                    name: record["sha256"]
+                    for name, record in sorted(dataset.manifest["tables"].items())
+                },
+                options={
+                    "format": path.suffix,
+                    "organism_column": organism_column,
+                    "gene_column": gene_column,
+                    "has_header": has_header,
+                    "column_names": column_names,
+                    "whitespace": "reject",
+                },
                 annotation=checksum(path),
             ),
+            kind="annotated",
         )
         for table in dataset.manifest["tables"]:
             writer.write(table, dataset.scan(table))

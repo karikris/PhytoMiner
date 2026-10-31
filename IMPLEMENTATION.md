@@ -394,3 +394,7 @@ Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake 
 ## 1.0.2 task 2.1
 Previous handshake: 1e566cc. GitHits Arrow 26 metadata and iter_batches reviewed. Arrow-only validation retains SQL-without-Polars lazy boundaries; schema 1/2 remain readable.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 1.0.2 task 2.2
+Previous handshake: bb6f4d2. GitHits CPython 3.15.2 hashlib reviewed. Derived identity uses sorted content hashes and all import settings, not generation UUIDs or timestamps.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
