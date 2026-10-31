@@ -3,7 +3,7 @@
 from .storage import digest
 from .models import ValidationError, Seed
 
-PROCESSING_CONTRACT_VERSION = 2
+PROCESSING_CONTRACT_VERSION = 3
 
 
 def _result_identity(kind, **inputs):

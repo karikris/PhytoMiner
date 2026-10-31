@@ -2,6 +2,7 @@
 
 lazy import polars as pl
 lazy import pyarrow.parquet as pq
+from .checkpoints import TraversalCheckpoint
 from .models import TABLES, RELATIONSHIP_COLUMNS
 from .normalization import _empty, _jobs
 
@@ -15,7 +16,33 @@ def _discover(
     queried = set()
     edge_parts, feature_parts, provenance_parts = [], [], []
     all_edges = _empty(RELATIONSHIP_COLUMNS + ("_retrieval_event_id",))
-    for depth in range(1, expansion_depth + 2):
+    checkpoint = TraversalCheckpoint(cache, client, roots, targets, expansion_depth)
+    restored = checkpoint.load()
+    start_depth = 1
+    if restored:
+        frontier = {
+            tuple(root): {tuple(n) for n in nodes}
+            for root, nodes in restored["frontier"]
+        }
+        visited = {
+            tuple(root): {tuple(n) for n in nodes}
+            for root, nodes in restored["visited"]
+        }
+        queried = {tuple(n) for n in restored["queried"]}
+        edge_parts = [checkpoint.root / p for p in restored["edges"]]
+        feature_parts = [checkpoint.root / p for p in restored["features"]]
+        provenance_parts = [checkpoint.root / p for p in restored["provenance"]]
+        cache.used_paths.update(checkpoint.root / p for p in restored["used_paths"])
+        all_edges = (
+            pl.scan_parquet(edge_parts).unique()
+            if edge_parts
+            else _empty(RELATIONSHIP_COLUMNS + ("_retrieval_event_id",))
+        )
+        start_depth = restored["depth"] + 1
+        if client.run is not None:
+            client.run.track_genes(set().union(*visited.values()))
+            client.run.emit("traversal_resumed", completed_depth=restored["depth"])
+    for depth in range(start_depth, expansion_depth + 2):
         if client.run is not None:
             client.run.check()
         needed = set().union(*frontier.values()) - queried
@@ -96,6 +123,18 @@ def _discover(
                     visited[root].add(node)
                     next_frontier[root].add(node)
         frontier = next_frontier
+        checkpoint.save(
+            depth,
+            frontier,
+            visited,
+            queried,
+            edge_parts,
+            feature_parts,
+            provenance_parts,
+            cache.used_paths,
+        )
+        if client.run is not None:
+            client.run.emit("level_completed", depth=depth)
         if not any(frontier.values()):
             break
     return (
