@@ -130,6 +130,8 @@ class RequestCache:
 
         refresh = refresh or self.refresh
         active_run = client.run
+        if active_run is not None:
+            active_run.check()
         xml, columns = client.build_query(page, genes, organism_id)
         key = digest(
             {
@@ -165,7 +167,9 @@ class RequestCache:
                         raise BatchSizeError(
                             "Response stream exhausted retries"
                         ) from exc
-                    time.sleep(0.25 * 2**attempt)
+                    (active_run.wait if active_run is not None else time.sleep)(
+                        0.25 * 2**attempt
+                    )
             parts = [{"file": path.name, **result}]
         except BatchSizeError:
             if len(genes) <= 1:

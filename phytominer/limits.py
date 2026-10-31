@@ -23,3 +23,20 @@ class RunLimits:
             not isfinite(self.max_seconds) or self.max_seconds <= 0
         ):
             raise ValidationError("max_seconds must be finite and positive")
+
+
+class CancellationToken:
+    def __init__(self):
+        import threading
+
+        self._event = threading.Event()
+
+    def cancel(self) -> None:
+        self._event.set()
+
+    @property
+    def cancelled(self) -> bool:
+        return self._event.is_set()
+
+    def wait(self, seconds: float) -> bool:
+        return self._event.wait(seconds)

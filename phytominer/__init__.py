@@ -21,7 +21,7 @@ lazy from .models import (
 )
 
 
-lazy from .limits import RunLimits
+lazy from .limits import RunLimits, CancellationToken
 
 __all__ = [
     "ClientConfig",
@@ -43,3 +43,5 @@ __all__ += [
 ]
 
 __all__ += ["RunLimits"]
+
+__all__ += ["CancellationToken"]

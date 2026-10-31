@@ -4,8 +4,8 @@ import time
 import uuid
 import threading
 from contextvars import ContextVar
-from .limits import RunLimits
-from .models import BudgetExceededError, DeadlineExceededError
+from .limits import RunLimits, CancellationToken
+from .models import BudgetExceededError, DeadlineExceededError, CancelledError
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from .storage import atomic_json
@@ -16,7 +16,8 @@ CURRENT_RUN: ContextVar = ContextVar("phytominer_run", default=None)
 
 
 class RunContext:
-    def __init__(self, root, client, callback=None, limits=None):
+    def __init__(self, root, client, callback=None, limits=None, cancel=None):
+        self.cancel = cancel or CancellationToken()
         self.limits = limits or RunLimits()
         self.genes = set()
         self.guard = threading.Lock()
@@ -40,11 +41,29 @@ class RunContext:
         self.started_at = datetime.now(timezone.utc).isoformat()
 
     def check(self):
+        if self.cancel.cancelled:
+            raise CancelledError("Run cancelled")
         if (
             self.limits.max_seconds is not None
             and time.monotonic() - self.started >= self.limits.max_seconds
         ):
             raise DeadlineExceededError("Invocation deadline expired")
+
+    def wait(self, seconds):
+        end = time.monotonic() + seconds
+        while time.monotonic() < end:
+            self.check()
+            self.cancel.wait(min(0.05, end - time.monotonic()))
+        self.check()
+
+    def timeouts(self, connect, read):
+        self.check()
+        if self.limits.max_seconds is None:
+            return connect, read
+        remaining = max(
+            0.001, self.limits.max_seconds - (time.monotonic() - self.started)
+        )
+        return min(connect, remaining), min(read, remaining)
 
     def track_genes(self, identities):
         self.check()
@@ -81,6 +100,7 @@ class RunContext:
 
     @contextmanager
     def stage(self, name):
+        self.check()
         start = time.monotonic()
         self.emit("stage_started", stage=name)
         try:
@@ -113,21 +133,24 @@ class RunContext:
 
 
 @contextmanager
-def run_context(root, client, callback=None, limits=None):
+def run_context(root, client, callback=None, limits=None, cancel=None):
     if client.run is not None:
         raise ValidationError("Client already has an active run")
-    run = RunContext(root, client, callback, limits)
+    run = RunContext(root, client, callback, limits, cancel)
     token = CURRENT_RUN.set(run)
     client.run = run
     try:
         run.emit("run_started")
+        run.check()
         yield run
         run.status = "complete"
     except BaseException as exc:
         run.status = "stopped"
         run.reason = type(exc).__name__
         for seed in run.outcomes:
-            if seed["status"] == "not_processed":
+            if seed["status"] == "not_processed" and not isinstance(
+                exc, (CancelledError, DeadlineExceededError, BudgetExceededError)
+            ):
                 seed["status"] = "failed"
         raise
     finally:

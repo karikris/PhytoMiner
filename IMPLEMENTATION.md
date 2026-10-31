@@ -425,3 +425,7 @@ Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake 
 ## 1.0.2 task 4.1
 Previous handshake: b764cac. GitHits CPython monotonic timing reviewed. Budget reservations count real HTTP attempts and preserve previous publications; controls default to unlimited.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 1.0.2 task 4.2
+Previous handshake: fad1e4b. GitHits requests 2.34.2 timeout/stream contracts reviewed. Interruptible waits and stream checkpoints preserve raw cache and previous publications.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.

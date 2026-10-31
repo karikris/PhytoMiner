@@ -16,3 +16,14 @@ def test_http_budget_reservation(tmp_path):
     run=RunContext(tmp_path,FixtureClient(),limits=RunLimits(max_requests=1))
     run.before_http()
     with pytest.raises(BudgetExceededError):run.before_http()
+
+def test_cancel_and_deadline_cleanup(tmp_path):
+    import time
+    from phytominer import CancellationToken, CancelledError, DeadlineExceededError
+    token=CancellationToken();token.cancel()
+    with pytest.raises(CancelledError):fetch_homologs([Seed('1','a')],output_dir=tmp_path,client=FixtureClient(),cancel=token)
+    assert not (tmp_path/'.writer.lock').exists()
+    class Slow(FixtureClient):
+        def metadata(self): time.sleep(.01); return super().metadata()
+    with pytest.raises(DeadlineExceededError):fetch_homologs([Seed('1','a')],output_dir=tmp_path,client=Slow(),limits=RunLimits(max_seconds=.001))
+    assert not (tmp_path/'manifest.json').exists()

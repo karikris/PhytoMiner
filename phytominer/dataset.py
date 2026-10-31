@@ -149,6 +149,8 @@ class DatasetWriter:
         candidate = {**self.manifest, **details, "status": "complete"}
         pinned = HomologDataset._from_manifest(self.root, candidate)
         atomic_json(self.directory / "manifest.json", pinned.manifest)
+        if active is not None:
+            active.check()
         atomic_json(self.root / "manifest.json", pinned.manifest)
         self.manifest = deepcopy(pinned.manifest)
         return pinned

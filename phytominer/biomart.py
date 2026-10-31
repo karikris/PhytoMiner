@@ -60,6 +60,8 @@ class BioMartClient:
         for attempt in range(self.config.attempts):
             with self._condition:
                 while True:
+                    if self.run is not None:
+                        self.run.check()
                     delay = max(self._next_start, self._cooldown) - time.monotonic()
                     if self._active < self.effective_workers and delay <= 0:
                         self._active += 1
@@ -75,7 +77,13 @@ class BioMartClient:
                 response = self._session().request(
                     method,
                     self.config.endpoint,
-                    timeout=(self.config.connect_timeout, self.config.read_timeout),
+                    timeout=(
+                        self.run.timeouts(
+                            self.config.connect_timeout, self.config.read_timeout
+                        )
+                        if self.run is not None
+                        else (self.config.connect_timeout, self.config.read_timeout)
+                    ),
                     **kwargs,
                 )
                 status = response.status_code
@@ -120,7 +128,9 @@ class BioMartClient:
                         else ServiceError
                     )
                     raise error("BioMart request exhausted transient retries") from exc
-                time.sleep(0.25 * 2**attempt + random.uniform(0, 0.1))
+                (self.run.wait if self.run is not None else time.sleep)(
+                    0.25 * 2**attempt + random.uniform(0, 0.1)
+                )
                 continue
             except Exception as exc:
                 if response is not None:
@@ -318,6 +328,8 @@ class BioMartClient:
 
         def lines(response):
             for line in response.iter_lines(decode_unicode=True):
+                if self.run is not None:
+                    self.run.check()
                 stats["response_bytes"] += len(line.encode("utf-8")) + 1
                 yield line
 

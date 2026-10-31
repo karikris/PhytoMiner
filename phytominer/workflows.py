@@ -4,7 +4,7 @@ from dataclasses import asdict
 from pathlib import Path
 from .outcomes import write_outcomes
 from .evidence import write_evidence
-from .limits import RunLimits
+from .limits import RunLimits, CancellationToken
 from .run import run_context
 from .contracts import Seeds, Targets
 lazy import polars as pl
@@ -40,6 +40,7 @@ def fetch_homologs(
     refresh: bool = False,
     progress=None,
     limits: RunLimits | None = None,
+    cancel: CancellationToken | None = None,
 ) -> HomologDataset:
     """Retrieve reported seed relationships; labels never multiply edge evidence."""
     seed_records = sorted(
@@ -61,7 +62,10 @@ def fetch_homologs(
     owned = client is None
     client = client or BioMartClient()
     try:
-        with _run_lock(root), run_context(root, client, progress, limits) as run:
+        with (
+            _run_lock(root),
+            run_context(root, client, progress, limits, cancel) as run,
+        ):
             run.outcomes = [
                 {
                     "organism_id": s.organism_id,
@@ -206,6 +210,7 @@ def fetch_features(
     refresh: bool = False,
     progress=None,
     limits: RunLimits | None = None,
+    cancel: CancellationToken | None = None,
 ) -> HomologDataset:
     """Retrieve transcript-grain features for organism-qualified genes."""
     gene_keys = sorted({(s.organism_id, s.gene_name) for s in normalize_seeds(genes)})
@@ -215,7 +220,10 @@ def fetch_features(
     owned = client is None
     client = client or BioMartClient()
     try:
-        with _run_lock(root), run_context(root, client, progress, limits) as run:
+        with (
+            _run_lock(root),
+            run_context(root, client, progress, limits, cancel) as run,
+        ):
             cache = RequestCache(root / "requests")
             with run.stage("metadata"):
                 fingerprint = cache.metadata(client, refresh)
