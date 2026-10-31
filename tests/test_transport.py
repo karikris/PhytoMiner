@@ -44,7 +44,7 @@ def test_concurrency_and_rate():
         assert state['peak'] <= 2
         assert all(b-a >= .015 for a,b in zip(state['starts'],state['starts'][1:]))
 
-@pytest.mark.parametrize('status,error', [(413,BatchSizeError),(400,ServiceError),(503,BatchSizeError)])
+@pytest.mark.parametrize('status,error', [(413,BatchSizeError),(400,ServiceError),(503,ServiceError)])
 def test_terminal_failures(status,error):
     with server([status]) as (url,state), BioMartClient(ClientConfig(endpoint=url,attempts=1,requests_per_second=100)) as client:
         with pytest.raises(error):

@@ -7,7 +7,8 @@ import sys
 import tempfile
 import tomllib
 
-version=tomllib.loads(Path('pyproject.toml').read_text())['project']['version']
+from phytominer import __version__
+version=__version__
 wheel=Path('dist') / f'phytominer-{version}-py3-none-any.whl'
 with tempfile.TemporaryDirectory() as tmp:
     env=Path(tmp)/'venv'

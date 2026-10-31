@@ -71,7 +71,7 @@ completion. Acceptance: truncation never publishes; empty/null/string-ID typed
 round trips and cumulative suite PASS.
 
 ## 3.2 Validated resume
-Previous handshake: atomic persistence task commit (git log).
+Previous handshake: 8cda75c.
 GitHits CPython v3.15.2 Doc/library/os.rst:2882-2892 verifies same-filesystem
 atomic replacement. Query hashes include XML/endpoint/metadata/schema version;
 checksums, schemas and row counts validate every reused part. Split results are
@@ -80,7 +80,7 @@ Acceptance: corruption, input changes, refresh, failed queries and split-cache
 resume tests plus cumulative suite PASS.
 
 ## 3.3 Dataset publication
-Previous handshake: validated-cache task commit (git log).
+Previous handshake: ad984c8.
 GitHits polars@2.1.0 src/polars/lazyframe/frame.py:2463-2472 confirms
 sink_parquet Zstandard and row-group options. Each generation has compact tables;
 manifest is published atomically only after all writes. Incomplete runs cannot
@@ -100,7 +100,7 @@ Acceptance: duplicate evidence, multiple labels, transcript grain, novel
 relationships, empty results, target selection and offline resume PASS.
 
 ## 4.2 Bounded expansion
-Previous handshake: direct-workflow commit (git log).
+Previous handshake: f187234.
 GitHits polars@2.1.0 src/polars/lazyframe/frame.py:6074-6082 verifies semi/anti
 joins. Breadth-first traversal persists each level, tracks visited pairs per
 root and queries each pair once globally. Direct edges retain reported values;
@@ -108,7 +108,7 @@ root discovery depth is separate. Acceptance: cycles, boundaries, multiple roots
 query-once and depth tests plus cumulative suite PASS.
 
 ## 4.3 Features and annotations
-Previous handshake: expansion commit (git log). GitHits polars@2.1.0
+Previous handshake: 4661494. GitHits polars@2.1.0
 src/polars/io/csv/functions.py:558-950 verifies explicit headers/schema handling;
 LazyFrame.join validate=m:1 evidence reused. Scoped feature API preserves every
 transcript; unmatched genes are explicit. CSV/TSV/Parquet annotations join on
@@ -144,7 +144,7 @@ target genes without joining labels/transcripts. Acceptance: lazy result and
 scientific-grain regression plus cumulative suite PASS.
 
 ## 5.2 DuckDB views
-Previous handshake: lazy-summary commit (git log). GitHits duckdb@2.0.0
+Previous handshake: b4903ee. GitHits duckdb@2.0.0
 duckdb/_relation.py:2836-2842 verifies relation.create_view(name, replace=True).
 Use relation APIs instead of interpolating file paths in SQL. Connection is
 caller-owned; Parquet remains canonical. Acceptance: SQL/Polars count parity,
@@ -154,7 +154,7 @@ transcript counts and quoted-path tests plus cumulative suite PASS.
 verified upstream and changed examples/tests to fetchall(). Cumulative rerun PASS.
 
 ## 5.3 Lazy-import trial
-Previous handshake: DuckDB-views task commit (git log). GitHits CPython v3.15.2
+Previous handshake: 903a768. GitHits CPython v3.15.2
 Doc/whatsnew/3.15.rst:179-240 confirms first-use failures and isolated global
 mode. Explicit module-scope lazy imports; transport/Arrow resolve before worker
 dispatch. Opening a dataset uses Arrow to validate Parquet metadata; SQL access
@@ -190,3 +190,42 @@ One million synthetic rows: 0.205s, 442046-byte Parquet, 619737088-byte peak pro
 RSS, matching SQL/Polars counts, zero network. These are measurements on this
 machine and repetitive data, not memory/throughput guarantees. See validation.json
 for small workload and import comparison. Installed-wheel smoke test PASS.
+
+## 6.3 Release audit and preparation
+Previous handshake: dcc2d6d. GitHits CPython v3.15.2
+Doc/library/zipfile.rst:309-311,437-441 verifies distribution inspection APIs.
+Prepared 1.0.0 with a single version source, Python 3.15.2 development pin, SPDX
+license metadata and no publication workflow. Clean builds exclude every removed
+module. Audits inspect runtime source, wheel, sdist and dependency declarations.
+Final review tightened integer/finite configuration checks, query identity,
+manifest package/schema metadata, response metrics and transactional stream
+retries. Connection failures do not trigger futile batch splitting. Executed all
+README Python blocks with fixture injection. Local acceptance: 51 tests PASS,
+wheel/sdist build PASS, isolated wheel install PASS, legacy audit PASS.
+Final remote handshake is performed on this task's commit; SHA and CI run are
+reported in the completion message, avoiding a self-referential commit hash.
+
+## Task commit index
+
+| Task | Commit |
+| --- | --- |
+| 1.1 Runtime | bc2a588 |
+| 1.2 Removal | 7371279 |
+| 1.3 Contracts | 740c3b5 |
+| 2.1 Metadata | f07311d |
+| 2.2 XML/parser | a810d1c |
+| 2.3 Scheduler | 81a1beb |
+| 3.1 Atomic Parquet | 8cda75c |
+| 3.2 Resume | ad984c8 |
+| 3.3 Publication | e7cc854 |
+| 4.1 Direct search | f187234 |
+| 4.2 Expansion | 4661494 |
+| 4.3 Enrichment | 54b9893 |
+| Phase 4 refresh correction | db34525 |
+| Phase 4 live-data correction | b080c9d |
+| 5.1 Polars | b4903ee |
+| 5.2 DuckDB | 903a768 |
+| 5.3 Lazy imports | c7fc527 |
+| 6.1 Examples/docs | 946fa70 |
+| 6.2 Performance/install | dcc2d6d |
+| 6.3 Final audit | Final completion SHA |

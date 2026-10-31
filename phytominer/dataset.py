@@ -16,7 +16,8 @@ class DatasetWriter:
         self.generation = uuid.uuid4().hex
         self.directory = self.root / 'tables' / self.generation
         self.directory.mkdir(parents=True, exist_ok=True)
-        self.manifest = {'schema_version': SCHEMA_VERSION, 'status': 'incomplete',
+        from . import __version__
+        self.manifest = {'package_version': __version__, 'schema_version': SCHEMA_VERSION, 'status': 'incomplete',
             'identity': identity, 'tables': {}, 'created_at': datetime.now(timezone.utc).isoformat()}
         atomic_json(self.root / 'manifest.json', self.manifest)
 
@@ -46,11 +47,14 @@ class HomologDataset:
             self.manifest = json.loads((self.root / 'manifest.json').read_text())
             if self.manifest['status'] != 'complete' or self.manifest['schema_version'] != SCHEMA_VERSION:
                 raise ValueError('Incomplete or unsupported manifest')
-            for record in self.manifest['tables'].values():
+            for name, record in self.manifest['tables'].items():
                 path = (self.root / record['file']).resolve()
                 if not path.is_relative_to(self.root.resolve()) or checksum(path) != record['sha256']:
                     raise ValueError('Invalid dataset file')
-                if pq.ParquetFile(path).metadata.num_rows != record['rows']:
+                file = pq.ParquetFile(path)
+                if name in TABLES and file.schema_arrow.names != list(TABLES[name]):
+                    raise ValueError('Invalid dataset table schema')
+                if file.metadata.num_rows != record['rows']:
                     raise ValueError('Invalid dataset row count')
         except (OSError, ValueError, KeyError) as exc:
             raise IncompleteDatasetError(f'Cannot open dataset: {exc}') from exc

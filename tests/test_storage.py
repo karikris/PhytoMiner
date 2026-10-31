@@ -77,3 +77,15 @@ def test_refresh_replaces_canonical_cache(tmp_path):
     RequestCache(tmp_path,refresh=True).fetch(client,'features',['a'],'167')
     RequestCache(tmp_path).fetch(client,'features',['a'],'167')
     assert client.calls==2
+
+def test_stream_retry_is_transactional(tmp_path):
+    from phytominer.models import StreamError
+    class Flaky(FakeClient):
+        def query(self,page,genes=(),organism_id=None):
+            if not getattr(self,'failed',False):
+                self.failed=True
+                yield [dict(zip(self.build_query(page,genes,organism_id)[1], ['167','org','001','0001','001.1','0002']))]
+                raise StreamError('truncated')
+            yield from super().query(page,genes,organism_id)
+    paths=RequestCache(tmp_path).fetch(Flaky(),'features',['001'],'167')
+    assert pq.ParquetFile(paths[0]).metadata.num_rows==1

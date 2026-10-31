@@ -117,11 +117,13 @@ def _discover(client, cache, seeds, targets, expansion_depth, scratch):
 def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_dir, client=None, refresh=False):
     """Retrieve reported seed relationships; labels never multiply edge evidence."""
     seeds = sorted(set(seed if isinstance(seed, Seed) else Seed(**seed) for seed in seeds),
-                   key=lambda s:(s.organism_id,s.gene_name,s.label or ''))
+                   key=lambda s:(s.organism_id,s.gene_name,s.label is not None,s.label or ''))
     if not seeds:
         raise ValidationError('At least one seed is required')
     if not isinstance(expansion_depth, int) or isinstance(expansion_depth, bool) or expansion_depth < 0:
         raise ValidationError('Expansion depth must be a nonnegative integer')
+    if target_organisms is not None and (isinstance(target_organisms,str) or any(not isinstance(v,str) or not v.strip() for v in target_organisms)):
+        raise ValidationError('Target organisms must be a list of nonempty strings')
     if expansion_depth and not target_organisms:
         raise ValidationError('Expansion requires an explicit organism boundary')
     root = Path(output_dir)
@@ -132,7 +134,7 @@ def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_di
             cache = RequestCache(root / 'requests', refresh=refresh)
             fingerprint = cache.metadata(client, refresh)
             identity = digest({'seeds':[asdict(s) for s in seeds], 'targets':sorted(target_organisms or []),
-                'depth':expansion_depth, 'metadata':fingerprint, 'endpoint':client.config.endpoint})
+                'depth':expansion_depth, 'metadata':fingerprint, 'endpoint':client.config.endpoint, 'dataset':client.config.dataset, 'virtual_schema':client.config.virtual_schema})
             if not refresh:
                 try:
                     result = HomologDataset(root)
@@ -172,7 +174,7 @@ def fetch_features(genes, *, output_dir, client=None, refresh=False):
     try:
         with _run_lock(root):
             cache=RequestCache(root/'requests'); fingerprint=cache.metadata(client,refresh)
-            identity=digest({'genes':genes,'metadata':fingerprint,'endpoint':client.config.endpoint})
+            identity=digest({'genes':genes,'metadata':fingerprint,'endpoint':client.config.endpoint,'dataset':client.config.dataset,'virtual_schema':client.config.virtual_schema})
             if not refresh:
                 try:
                     previous=HomologDataset(root)

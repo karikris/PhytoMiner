@@ -9,7 +9,7 @@ from email.utils import parsedate_to_datetime
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
 import xml.etree.ElementTree as ET
 lazy import requests
-from .models import BatchSizeError, ClientConfig, ServiceError, ValidationError, ORTHOLOG_ATTRIBUTES, FEATURE_ATTRIBUTES
+from .models import StreamError, BatchSizeError, ClientConfig, ServiceError, ValidationError, ORTHOLOG_ATTRIBUTES, FEATURE_ATTRIBUTES
 
 class BioMartClient:
     def __init__(self, config=None):
@@ -83,7 +83,8 @@ class BioMartClient:
                     self._condition.notify_all()
                 self.metrics.append({'method': method, 'attempt': attempt + 1, 'seconds': time.monotonic() - started, 'retry': True})
                 if attempt + 1 == self.config.attempts:
-                    raise BatchSizeError('BioMart request exhausted transient retries') from exc
+                    error = BatchSizeError if isinstance(exc, requests.Timeout) else ServiceError
+                    raise error('BioMart request exhausted transient retries') from exc
                 time.sleep(0.25 * 2 ** attempt + random.uniform(0, 0.1))
                 continue
             except Exception as exc:
@@ -209,18 +210,28 @@ class BioMartClient:
                 yield batch
                 batch = []
         if not complete:
-            raise ServiceError('Missing BioMart completion marker; response may be truncated')
+            raise StreamError('Missing BioMart completion marker; response may be truncated')
         if batch:
             yield batch
 
     def query(self, page, genes=(), organism_id=None):
         self.metadata()
         xml, columns = self.build_query(page, genes, organism_id)
+        stats = {'query_hash': hashlib.sha256(xml.encode()).hexdigest(), 'rows': 0, 'response_bytes': 0, 'complete': False}
+        def lines(response):
+            for line in response.iter_lines(decode_unicode=True):
+                stats['response_bytes'] += len(line.encode('utf-8')) + 1
+                yield line
         try:
             with self._request('POST', data={'query': xml}, stream=True) as response:
-                yield from self.parse_lines(response.iter_lines(decode_unicode=True), columns)
+                for batch in self.parse_lines(lines(response), columns):
+                    stats['rows'] += len(batch)
+                    yield batch
+                stats['complete'] = True
         except requests.RequestException as exc:
-            raise BatchSizeError('BioMart response stream failed') from exc
+            raise StreamError('BioMart response stream failed') from exc
+        finally:
+            self.metrics.append(stats)
 
     def organisms(self):
         return sorted((row for batch in self.query('organisms') for row in batch), key=lambda row: row['organism_id'])

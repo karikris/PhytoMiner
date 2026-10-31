@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 import tempfile
+import time
 from pathlib import Path
 lazy import pyarrow as pa
 lazy import pyarrow.parquet as pq
@@ -84,6 +85,8 @@ class RequestCache:
 
     def valid(self, record, columns):
         try:
+            if not record['parts']:
+                return False
             for part in record['parts']:
                 path = self.root / part['file']
                 if path.parent != self.root or checksum(path) != part['sha256']:
@@ -96,7 +99,7 @@ class RequestCache:
             return False
 
     def fetch(self, client, page, genes=(), organism_id=None, refresh=False):
-        from .models import BatchSizeError
+        from .models import BatchSizeError, StreamError
         refresh = refresh or self.refresh
         xml, columns = client.build_query(page, genes, organism_id)
         key = digest({'xml': xml, 'endpoint': client.config.endpoint,
@@ -111,7 +114,14 @@ class RequestCache:
                 pass
         path = self.root / (key + '.parquet')
         try:
-            result = write_batches(path, columns, client.query(page, genes, organism_id))
+            for attempt in range(client.config.attempts):
+                try:
+                    result = write_batches(path, columns, client.query(page, genes, organism_id))
+                    break
+                except StreamError as exc:
+                    if attempt + 1 == client.config.attempts:
+                        raise BatchSizeError('Response stream exhausted retries') from exc
+                    time.sleep(0.25 * 2 ** attempt)
             parts = [{'file': path.name, **result}]
         except BatchSizeError:
             if len(genes) <= 1:

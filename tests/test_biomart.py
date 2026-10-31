@@ -44,3 +44,13 @@ def test_bad_responses(lines):
 def test_empty_and_bounded_responses():
     assert list(BioMartClient.parse_lines(['[success]'], ('a','b'))) == []
     assert list(BioMartClient.parse_lines(['x\t', 'y\tz', '[success]'], ('a','b'), batch_size=1)) == [[{'a':'x','b':None}], [{'a':'y','b':'z'}]]
+
+def test_metadata_snapshot_supports_offline_resume(tmp_path,metadata):
+    from phytominer.storage import RequestCache
+    first=BioMartClient(); first._metadata=metadata
+    cache=RequestCache(tmp_path)
+    fingerprint=cache.metadata(first)
+    second=BioMartClient()
+    def offline(*args,**kwargs): raise AssertionError('unexpected network')
+    second._request=offline
+    assert cache.metadata(second)==fingerprint

@@ -23,3 +23,7 @@ def test_config_and_seed():
     assert ClientConfig().max_workers == 2
     with pytest.raises(ValidationError):
         ClientConfig(max_workers=5)
+
+@pytest.mark.parametrize('kwargs',[{'max_workers':1.5},{'attempts':True},{'requests_per_second':float('nan')},{'read_timeout':float('inf')}])
+def test_invalid_numeric_config(kwargs):
+    with pytest.raises(ValidationError): ClientConfig(**kwargs)

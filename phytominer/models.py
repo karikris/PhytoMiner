@@ -1,6 +1,7 @@
 """Lightweight public configuration, identity and table contracts."""
 from dataclasses import dataclass
 from urllib.parse import urlparse
+from math import isfinite
 
 class PhytoMinerError(Exception):
     """Base error; failed requests are never represented as empty data."""
@@ -9,6 +10,9 @@ class ValidationError(PhytoMinerError, ValueError):
     pass
 
 class ServiceError(PhytoMinerError):
+    pass
+
+class StreamError(ServiceError):
     pass
 
 class BatchSizeError(ServiceError):
@@ -43,6 +47,10 @@ class ClientConfig:
     attempts: int = 4
 
     def __post_init__(self):
+        if any(not isinstance(v,int) or isinstance(v,bool) for v in (self.max_workers,self.batch_size,self.attempts)):
+            raise ValidationError('Workers, batch size and attempts must be integers')
+        if not all(isfinite(v) for v in (self.requests_per_second,self.connect_timeout,self.read_timeout)):
+            raise ValidationError('Rates and timeouts must be finite')
         if not 1 <= self.max_workers <= 4 or not 1 <= self.batch_size <= 10000:
             raise ValidationError('workers must be 1..4 and batch_size 1..10000')
         if self.attempts < 1 or min(self.requests_per_second, self.connect_timeout, self.read_timeout) <= 0:

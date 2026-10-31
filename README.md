@@ -100,3 +100,5 @@ Phytozome access. `examples/workflow.py` is an executable live example, tested w
 an injected fixture client. Details and research evidence: [implementation ledger](IMPLEMENTATION.md).
 
 License: [MIT](LICENSE).
+
+Measured workload results and limitations: [validation report](docs/validation.json).

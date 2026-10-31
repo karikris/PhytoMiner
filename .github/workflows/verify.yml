@@ -27,3 +27,4 @@ jobs:
       - run: uv build
       - run: uv run --no-sync python scripts/check_wheel.py
       - run: uv run --no-sync python scripts/benchmark_dataset.py --rows 1000000
+      - run: uv run --no-sync python scripts/audit_release.py

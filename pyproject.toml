@@ -1,18 +1,19 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=80"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "phytominer"
-version = "0.2.0"
+dynamic = ["version"]
 authors = [
   { name="Kris Kari", email="toffe.kari@gmail.com" }
 ]
 description = "A Python library for efficiently fetching and processing gene homolog data from the Phytozome database."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.15"
 classifiers = [
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.15",
@@ -38,3 +39,5 @@ include = ["phytominer*"]
 
 [tool.pytest.ini_options]
 pythonpath = "."
+[tool.setuptools.dynamic]
+version = {attr = "phytominer.__version__"}
