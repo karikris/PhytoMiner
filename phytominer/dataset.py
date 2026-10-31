@@ -21,7 +21,7 @@ class DatasetWriter:
         from . import __version__
         self.manifest = {'package_version': __version__, 'schema_version': DATASET_SCHEMA_VERSION, 'status': 'incomplete',
             'identity': identity, 'tables': {}, 'created_at': datetime.now(timezone.utc).isoformat()}
-        atomic_json(self.root / 'manifest.json', self.manifest)
+        atomic_json(self.directory / 'manifest.json', self.manifest)
 
     def write(self, name, frame):
         columns = TABLES.get(name)
@@ -36,6 +36,7 @@ class DatasetWriter:
             temp.unlink(missing_ok=True)
         self.manifest['tables'][name] = {'file': path.relative_to(self.root).as_posix(),
             'sha256': checksum(path), 'rows': pq.ParquetFile(path).metadata.num_rows}
+        atomic_json(self.directory / 'manifest.json', self.manifest)
 
     def finish(self, **details):
         self.manifest.update(details, status='complete')

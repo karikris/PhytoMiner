@@ -290,3 +290,10 @@ and schema 2 writes verified. No push; proceed to private dataset publication.
 Phase 2 pre-commit check corrected a regression expectation: unresolved target
 IDs stop traversal, so the missing-source multi-root fixture has three provenance
 rows, not four. Phase 3 changes held aside until the phase gate passes.
+
+## Task 3.1 — Private staging
+Previous handshake: 4690de0 (81 tests PASS). GitHits CPython v3.15.2 os.replace
+same-filesystem atomicity checked. Writer initialization and table checkpoints
+write only generation-private manifests. Tests verify previous public manifest
+bytes and readers remain unchanged; first incomplete run stays unpublished.
+Targeted/cumulative tests and diff checks PASS; commit handshake PASS.
