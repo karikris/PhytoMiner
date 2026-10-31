@@ -86,3 +86,15 @@ sink_parquet Zstandard and row-group options. Each generation has compact tables
 manifest is published atomically only after all writes. Incomplete runs cannot
 be opened. Acceptance: publication/incomplete/corruption tests and cumulative
 suite PASS; phase 3 ready for remote handshake.
+
+## Phase 3 remote handshake
+e7cc854: run 41176856442 PASS on Linux/macOS/Windows.
+
+## 4.1 Direct retrieval
+Previous handshake: e7cc854. GitHits polars@2.1.0 LazyFrame join/unique
+APIs researched; local fixtures verify identity-qualified joins. Discover target
+organism identities through bounded unscoped feature queries, avoiding the slow
+whole-genome organism scan. Gene-name resolution is checked against exact
+reported organism names; ambiguous/missing identities fail visibly.
+Acceptance: duplicate evidence, multiple labels, transcript grain, novel
+relationships, empty results, target selection and offline resume PASS.

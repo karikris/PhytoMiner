@@ -1,0 +1,39 @@
+import pytest
+from phytominer import Seed, fetch_homologs
+from phytominer.biomart import BioMartClient
+from phytominer.models import FEATURE_ATTRIBUTES, ORTHOLOG_ATTRIBUTES
+
+class FixtureClient(BioMartClient):
+    def __init__(self,config=None):
+        super().__init__(config); self.calls=[]
+    def metadata(self): return {'fixture':'v1'}
+    def validate_metadata(self,data): pass
+    def query(self,page,genes=(),organism_id=None):
+        self.calls.append((page,tuple(genes),organism_id))
+        if page=='orthologs':
+            values=[]
+            for gene in genes:
+                if gene=='missing': continue
+                target='b' if organism_id=='1' else 'a'
+                values.extend([['g',gene,'org'+organism_id,target,'org2' if organism_id=='1' else 'org1','new-relationship']]*2)
+            yield [dict(zip(ORTHOLOG_ATTRIBUTES,row)) for row in values]
+        else:
+            yield [dict(zip(FEATURE_ATTRIBUTES,[org,'org'+org,gene,org+gene,gene+'.'+t,org+gene+t]))
+                for org in ('1','2') for gene in genes for t in ('1','2')]
+
+def test_direct_and_offline_resume(tmp_path):
+    c=FixtureClient()
+    result=fetch_homologs([Seed('1','a','X'),Seed('1','a','Y')],output_dir=tmp_path,client=c)
+    assert result.scan('relationships').collect().height==1
+    assert result.scan('features').collect().height==4
+    assert result.scan('seeds').collect().height==2
+    assert result.scan('provenance').collect()['depth'].to_list()==[1]
+    count=len(c.calls)
+    fetch_homologs([Seed('1','a','X'),Seed('1','a','Y')],output_dir=tmp_path,client=c)
+    assert len(c.calls)==count
+
+def test_missing_genes_and_targets(tmp_path):
+    result=fetch_homologs([Seed('1','missing')],output_dir=tmp_path,client=FixtureClient())
+    assert result.scan('relationships').collect().is_empty()
+    result=fetch_homologs([Seed('1','a')],target_organisms=['1'],output_dir=tmp_path,client=FixtureClient())
+    assert result.scan('relationships').collect().is_empty()

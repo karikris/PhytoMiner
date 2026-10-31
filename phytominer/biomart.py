@@ -167,10 +167,10 @@ class BioMartClient:
 
     def build_query(self, page, genes=(), organism_id=None):
         attrs = {'orthologs': ORTHOLOG_ATTRIBUTES, 'features': FEATURE_ATTRIBUTES,
-                 'organisms': ('organism_id', 'organism_name')}
+                 'resolve': FEATURE_ATTRIBUTES, 'organisms': ('organism_id', 'organism_name')}
         if page not in attrs:
             raise ValidationError(f'Unsupported query page: {page}')
-        if page != 'organisms' and (not genes or not organism_id):
+        if page != 'organisms' and (not genes or (not organism_id and page != 'resolve')):
             raise ValidationError('Gene queries require identifiers and a source organism')
         from .models import Seed
         for gene in genes:
@@ -219,7 +219,7 @@ class BioMartClient:
             with self._request('POST', data={'query': xml}, stream=True) as response:
                 yield from self.parse_lines(response.iter_lines(decode_unicode=True), columns)
         except requests.RequestException as exc:
-            raise ServiceError('BioMart response stream failed') from exc
+            raise BatchSizeError('BioMart response stream failed') from exc
 
     def organisms(self):
         return sorted((row for batch in self.query('organisms') for row in batch), key=lambda row: row['organism_id'])
