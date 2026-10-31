@@ -55,3 +55,71 @@ def write_batches(path, columns, batches):
         return {'rows': rows, 'sha256': checksum(path), 'columns': list(columns)}
     finally:
         Path(temp).unlink(missing_ok=True)
+
+class RequestCache:
+    def __init__(self, root):
+        self.root = Path(root)
+        self.root.mkdir(parents=True, exist_ok=True)
+
+    def metadata(self, client, refresh=False):
+        identity = {'endpoint': client.config.endpoint, 'dataset': client.config.dataset,
+                    'schema': client.config.virtual_schema}
+        path = self.root / 'metadata.json'
+        if not refresh and path.exists():
+            try:
+                saved = json.loads(path.read_text())
+                if saved['identity'] == identity and saved['checksum'] == digest(saved['data']):
+                    client.validate_metadata(saved['data'])
+                    client._metadata = saved['data']
+            except (ValueError, KeyError, ServiceError):
+                pass
+        if refresh:
+            client._metadata = None
+        data = client.metadata()
+        atomic_json(path, {'identity': identity, 'checksum': digest(data), 'data': data})
+        return client.metadata_fingerprint
+
+    def valid(self, record, columns):
+        try:
+            for part in record['parts']:
+                path = self.root / part['file']
+                if path.parent != self.root or checksum(path) != part['sha256']:
+                    return False
+                file = pq.ParquetFile(path)
+                if file.schema_arrow != arrow_schema(columns) or file.metadata.num_rows != part['rows']:
+                    return False
+            return record['status'] == 'complete'
+        except (OSError, ValueError, KeyError, pa.ArrowException):
+            return False
+
+    def fetch(self, client, page, genes=(), organism_id=None, refresh=False):
+        from .models import BatchSizeError
+        xml, columns = client.build_query(page, genes, organism_id)
+        key = digest({'xml': xml, 'endpoint': client.config.endpoint,
+                      'metadata': client.metadata_fingerprint, 'schema_version': SCHEMA_VERSION})
+        manifest = self.root / (key + '.json')
+        if manifest.exists() and not refresh:
+            try:
+                record = json.loads(manifest.read_text())
+                if self.valid(record, columns):
+                    return [self.root / p['file'] for p in record['parts']]
+            except (ValueError, KeyError):
+                pass
+        path = self.root / (key + '.parquet')
+        try:
+            result = write_batches(path, columns, client.query(page, genes, organism_id))
+            parts = [{'file': path.name, **result}]
+        except BatchSizeError:
+            if len(genes) <= 1:
+                atomic_json(manifest, {'status': 'failed', 'query_hash': key})
+                raise
+            middle = len(genes) // 2
+            paths = [*self.fetch(client, page, genes[:middle], organism_id, refresh),
+                     *self.fetch(client, page, genes[middle:], organism_id, refresh)]
+            parts = [{'file': p.name, 'rows': pq.ParquetFile(p).metadata.num_rows,
+                      'sha256': checksum(p), 'columns': list(columns)} for p in paths]
+        except Exception:
+            atomic_json(manifest, {'status': 'failed', 'query_hash': key})
+            raise
+        atomic_json(manifest, {'status': 'complete', 'query_hash': key, 'parts': parts})
+        return [self.root / part['file'] for part in parts]

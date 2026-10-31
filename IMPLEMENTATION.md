@@ -69,3 +69,12 @@ pyarrow/parquet/core.py:1068-1151 confirms schema-bound ParquetWriter and
 compression. Bounded row groups, Zstandard and atomic promotion after producer
 completion. Acceptance: truncation never publishes; empty/null/string-ID typed
 round trips and cumulative suite PASS.
+
+## 3.2 Validated resume
+Previous handshake: atomic persistence task commit (git log).
+GitHits CPython v3.15.2 Doc/library/os.rst:2882-2892 verifies same-filesystem
+atomic replacement. Query hashes include XML/endpoint/metadata/schema version;
+checksums, schemas and row counts validate every reused part. Split results are
+cached transactionally. Metadata snapshots support offline unchanged resume.
+Acceptance: corruption, input changes, refresh, failed queries and split-cache
+resume tests plus cumulative suite PASS.
