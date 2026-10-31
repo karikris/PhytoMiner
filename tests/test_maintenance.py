@@ -18,3 +18,18 @@ def test_cleanup_protects_pinned_and_published(tmp_path):
 def test_writer_blocks_cleanup(tmp_path):
     (tmp_path/'.writer.lock').touch()
     assert plan_cleanup(tmp_path)['generations']==[]
+
+def test_cross_process_reader_lease(tmp_path):
+    import subprocess,sys
+    old=parent(tmp_path,'a')
+    code=f"from phytominer import HomologDataset; d=HomologDataset({str(tmp_path)!r}); print('ready',flush=True); input(); d.close()"
+    child=subprocess.Popen([sys.executable,'-u','-c',code],stdin=subprocess.PIPE,stdout=subprocess.PIPE,text=True)
+    try:
+        assert child.stdout.readline().strip()=='ready'
+        old.close();current=parent(tmp_path,'b')
+        assert plan_cleanup(tmp_path)['generations']==[]
+        child.communicate('\n',timeout=30)
+        assert plan_cleanup(tmp_path)['generations']
+        current.close()
+    finally:
+        if child.poll() is None:child.kill();child.wait()

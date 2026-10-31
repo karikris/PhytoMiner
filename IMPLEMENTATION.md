@@ -459,3 +459,7 @@ Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake 
 ## 1.0.2 task 6.3
 Previous handshake: 0e7402b. GitHits CPython O_EXCL and path containment reviewed. Reader leases and maintenance guard protect cross-process pinned generations; cleanup is explicit, dry-run first and stale-plan checked. Phase 6 lifecycle gate covered.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 1.0.2 task 7.1
+Previous handshake: c958b65. GitHits Hypothesis 6.170.14 settings verified. Reproducible generated graphs cover cycles roots missing features and reference traversal; cross-process reader pinning is exercised.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.

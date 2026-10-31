@@ -36,6 +36,7 @@ dev = [
     "build>=1.6,<2",
     "ruff==0.17.3",
     "pyright==1.1.414",
+    "hypothesis>=6.140,<7",
 ]
 
 [tool.setuptools.packages.find]

@@ -189,7 +189,7 @@ class HomologDataset:
 
     def close(self):
         lease = getattr(self, "_lease", None)
-        if lease is not None:
+        if lease is not None and lease.exists():
             with maintenance_lock(self.root):
                 lease.unlink(missing_ok=True)
             self._lease = None
