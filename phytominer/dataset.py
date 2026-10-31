@@ -19,7 +19,7 @@ from .schemas import TABLES_V2, REQUIRED, NULLABLE, KEYS
 DATASET_SCHEMA_VERSION = 3
 
 
-def _validate_manifest(root, manifest):
+def _validate_manifest(root, manifest, *, verify="full"):
     """Validate an unpublished candidate or an existing published generation."""
     root = Path(root)
     try:
@@ -37,9 +37,8 @@ def _validate_manifest(root, manifest):
                 )
         for name, record in manifest["tables"].items():
             path = (root / record["file"]).resolve()
-            if (
-                not path.is_relative_to(root.resolve())
-                or checksum(path) != record["sha256"]
+            if not path.is_relative_to(root.resolve()) or (
+                verify == "full" and checksum(path) != record["sha256"]
             ):
                 raise ValueError("Invalid dataset file")
             with pq.ParquetFile(path) as file:
@@ -59,7 +58,7 @@ def _validate_manifest(root, manifest):
                             raise ValueError("Invalid dataset column type")
                 if file.metadata.num_rows != record["rows"]:
                     raise ValueError("Invalid dataset row count")
-            if manifest["schema_version"] == 3:
+            if manifest["schema_version"] == 3 and verify == "full":
                 keys = KEYS.get(name, ())
                 required_columns = [
                     c for c in schemas.get(name, keys) if c not in NULLABLE
@@ -157,19 +156,26 @@ class DatasetWriter:
 
 
 class HomologDataset:
-    def __init__(self, root):
+    def __init__(self, root, *, verify="full"):
+        if verify not in ("full", "metadata"):
+            raise ValidationError("verify must be full or metadata")
+        self.verification_mode = verify
         self.root = Path(root)
         try:
             manifest = json.loads((self.root / "manifest.json").read_text())
         except (OSError, ValueError) as exc:
             raise IncompleteDatasetError(f"Cannot open dataset: {exc}") from exc
-        _validate_manifest(self.root, manifest)
+        if verify == "full":
+            _validate_manifest(self.root, manifest)
+        else:
+            _validate_manifest(self.root, manifest, verify=verify)
         self.manifest = deepcopy(manifest)
 
     @classmethod
     def _from_manifest(cls, root, manifest):
         _validate_manifest(root, manifest)
         result = cls.__new__(cls)
+        result.verification_mode = "full"
         result.root = Path(root)
         result.manifest = deepcopy(manifest)
         return result
