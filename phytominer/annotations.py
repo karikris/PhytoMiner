@@ -2,7 +2,7 @@
 
 from pathlib import Path
 lazy import polars as pl
-from .models import ValidationError
+from .models import ValidationError, AnnotationError
 from .storage import checksum
 from .inputs import _result_identity
 from .lifecycle import _run_lock
@@ -17,6 +17,7 @@ def join_annotations(
     gene_column="gene_name",
     has_header=True,
     column_names=None,
+    whitespace: str = "reject",
     output_dir: str | Path | None = None,
 ) -> pl.LazyFrame | HomologDataset:
     """Left join unique organism/gene annotations; ambiguous keys are errors."""
@@ -36,22 +37,30 @@ def join_annotations(
     else:
         raise ValidationError("Annotation format must be CSV, TSV or Parquet")
     keys = ["organism_id", "gene_name"]
-    annotation = annotation.rename(
-        {organism_column: "organism_id", gene_column: "gene_name"}
-    ).with_columns(pl.col(keys).cast(pl.String))
-    if (
-        annotation.filter(
-            pl.any_horizontal(
-                pl.col(keys).is_null()
-                | (pl.col(keys).str.strip_chars() == "")
-                | (pl.col(keys) == "")
-            )
-        )
-        .limit(1)
-        .collect()
-        .height
-    ):
-        raise ValidationError("Annotation keys must be nonempty")
+    if whitespace not in ("reject", "trim"):
+        raise AnnotationError("whitespace must be reject or trim")
+    try:
+        schema = annotation.collect_schema()
+    except (pl.exceptions.PolarsError, OSError) as exc:
+        raise AnnotationError(f"Cannot read annotation: {exc}") from exc
+    names = schema.names()
+    mapping = {organism_column: "organism_id", gene_column: "gene_name"}
+    if organism_column == gene_column or not set(mapping) <= set(names):
+        raise AnnotationError("Missing annotation key columns or conflicting mappings")
+    if len({mapping.get(n, n) for n in names}) != len(names):
+        raise AnnotationError("Column mapping collides with existing columns")
+    if any(n == "annotation_match" or n.startswith("_") for n in names):
+        raise AnnotationError("Reserved annotation column name")
+    if any(schema[c] != pl.String for c in mapping):
+        raise AnnotationError("Annotation identifier columns must be strings")
+    annotation = annotation.rename(mapping)
+    if whitespace == "trim":
+        annotation = annotation.with_columns(pl.col(keys).str.strip_chars())
+    invalid = pl.col(keys).is_null() | (pl.col(keys).str.strip_chars() == "")
+    if whitespace == "reject":
+        invalid = invalid | (pl.col(keys) != pl.col(keys).str.strip_chars())
+    if annotation.filter(pl.any_horizontal(invalid)).limit(1).collect().height:
+        raise AnnotationError("Annotation keys must be nonempty and trimmed")
     if (
         annotation.group_by(keys)
         .len()
@@ -60,7 +69,9 @@ def join_annotations(
         .collect()
         .height
     ):
-        raise ValidationError("Annotation organism/gene keys must be unique")
+        raise AnnotationError(
+            "Annotation organism/gene keys must be unique after normalization"
+        )
     result = (
         dataset.scan("genes")
         .join(
@@ -91,7 +102,7 @@ def join_annotations(
                     "gene_column": gene_column,
                     "has_header": has_header,
                     "column_names": column_names,
-                    "whitespace": "reject",
+                    "whitespace": whitespace,
                 },
                 annotation=checksum(path),
             ),

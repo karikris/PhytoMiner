@@ -447,3 +447,7 @@ Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake 
 ## 1.0.2 task 5.2
 Previous handshake: f21a567. GitHits Polars 2.1.0 lazy filtering reviewed. Catalog-backed local prefilter avoids unverified remote restrictions; final target correctness filter remains. Phase 5 interruption/resume and equivalence gate covered.
 Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
+
+## 1.0.2 task 6.1
+Previous handshake: 019d6f3. GitHits Polars 2.1.0 CSV schema and string trimming reviewed. Reserved columns, mapping collisions, string identifiers and post-trim duplicates are checked before joins.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
