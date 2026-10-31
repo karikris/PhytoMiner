@@ -243,14 +243,14 @@ ortholog requests. Targeted regressions and cumulative suite PASS; clean-tree
 commit handshake required before 1.2.
 
 ## Task 1.2 — Processed-result identity
-Previous handshake: Task 1.1 commit. GitHits CPython v3.15.2 JSON serialization
+Previous handshake: 5c9e045. GitHits CPython v3.15.2 JSON serialization
 contracts checked. Canonical target mode and processing contract version 2 apply
 to all processed workflow identities; raw XML cache hashes remain unchanged.
 Both request orders, equivalent selections, and old-result rebuild from raw cache
 pass with the cumulative suite. Task commit/clean-tree handshake PASS.
 
 ## Task 1.3 — Selection integration
-Previous handshakes: 5c9e045, Task 1.2 commit. GitHits pytest@9.2.0 parametrization
+Previous handshakes: 5c9e045, 6de7d5a. GitHits pytest@9.2.0 parametrization
 patterns checked. Direct, empty and bounded expansion selections tested across
 refresh and unchanged resume; expansion still rejects an empty boundary.
 Documentation states exact semantics. Cumulative suite and diff checks PASS.
@@ -268,7 +268,7 @@ IDs fail clearly. Missing source features preserve evidence. Targeted and
 cumulative tests/diff checks PASS; task commit/clean-tree handshake PASS.
 
 ## Task 2.2 — Resolution diagnostics
-Previous handshake: Task 2.1 commit. GitHits polars@2.1.0 conditional expressions,
+Previous handshake: b583b28. GitHits polars@2.1.0 conditional expressions,
 left-join null handling checked. Source/target statuses are resolved or
 missing_feature, computed against completed feature evidence. Known request IDs
 remain populated; unresolved targets keep null IDs. Both sides contribute to the
@@ -276,7 +276,7 @@ unresolved evidence table/count. Benchmark declares its synthetic resolved statu
 Source/target/both missing regressions and cumulative suite PASS.
 
 ## Task 2.3 — Schema compatibility
-Previous handshake: Task 2.2 commit. GitHits pyarrow@26.0.0 ParquetFile schema_arrow
+Previous handshake: e111ad4. GitHits pyarrow@26.0.0 ParquetFile schema_arrow
 and metadata row-count interfaces checked. Dataset schema 2 writes diagnostic
 columns; schema 1 remains readable without invented statuses. Raw request format
 stays version 1 so validated raw checkpoints retain their original identity.
@@ -336,3 +336,36 @@ legacy-removal audit; million-row SQL/Polars parity; fresh-process lazy imports.
 Million-row local run: 0.174s, 452470 Parquet bytes, 621748224 peak RSS bytes.
 Import harness median: lazy import 0.000201s, first use 0.352530s; eager import
 0.433252s, first use 0.021756s. Measurements are machine/workload-specific.
+
+## Task 4.3 — Reviewable GitHub backlog
+Previous handshake: 37b79e0. GitHits github:cli/cli@v2.46.0 (installed CLI)
+pkg/cmd/issue/list/list.go:100-104 and http.go:18-28 verify all-state issue
+reconciliation. GitHub connector create/update schemas inspected for publication.
+All-state repository scan found no issues; existing labels verified.
+Prepared 26 detailed payloads plus tracker in docs/backlog-issues.json. Stable
+markers prevent duplicates. Each has problem/scope/acceptance/priority/dependencies
+and a final-commit source/CI reference placeholder. B02/B09/B11 can close only
+after exact-SHA CI; B10 remains partially addressed. Added a column-reordering
+regression to verify B09 closure acceptance explicitly. Inventory integrity and
+cumulative suite PASS. External publication remains gated behind final push/CI.
+
+## Phase 4 final local handshake
+PASS: 96 tests, wheel/sdist build, isolated wheel install, distribution audits,
+million-row SQL/Polars parity and diff checks. Local task commits remain on main;
+one push follows this final task. Wait for all exact-SHA CI jobs before publishing
+issues. Final SHA, CI URL and issue URLs are recorded in the completion report.
+
+| Task | Commit |
+| --- | --- |
+| 1.1 Target normalization | 5c9e045 |
+| 1.2 Result identity | 6de7d5a |
+| 1.3 Selection integration | fda6801 |
+| 2.1 Source context | b583b28 |
+| 2.2 Resolution statuses | e111ad4 |
+| 2.3 Schema compatibility | 4690de0 |
+| 3.1 Private staging | e0713e1 |
+| 3.2 Validated publication | 39795b5 |
+| 3.3 Failure injection | b0a31e4 |
+| 4.1 Combined regressions | da876d9 |
+| 4.2 Release preparation | 37b79e0 |
+| 4.3 Backlog preparation | Final completion SHA |

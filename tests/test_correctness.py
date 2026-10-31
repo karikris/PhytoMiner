@@ -231,3 +231,19 @@ def test_candidate_validation_failure_during_refresh_keeps_old(tmp_path, monkeyp
             fetch_homologs([Seed('1','a')], output_dir=tmp_path, client=FixtureClient(), refresh=True)
     assert (tmp_path/'manifest.json').read_bytes() == before
     assert module.HomologDataset(tmp_path).manifest == original.manifest
+
+
+def test_normalization_ignores_raw_column_order_and_context_position(tmp_path, monkeypatch):
+    import phytominer.workflows as module
+    raw = module._raw
+    def reorder(*args, **kwargs):
+        frame = raw(*args, **kwargs)
+        if frame is not None:
+            names = frame.collect_schema().names()
+            if '_requested_source_organism_id' in names:
+                return frame.select(list(reversed(names)))
+        return frame
+    monkeypatch.setattr(module, '_raw', reorder)
+    dataset = fetch_homologs([Seed('1','a')], output_dir=tmp_path, client=FixtureClient())
+    edge = dataset.scan('relationships').collect().to_dicts()[0]
+    assert (edge['source_organism_id'], edge['source_gene_name'], edge['target_gene_name']) == ('1','a','b')

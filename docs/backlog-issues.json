@@ -1,0 +1,459 @@
+{
+  "repository": "karikris/PhytoMiner",
+  "issues": [
+    {
+      "id": "B01",
+      "title": "[B01] Validate organism selections against a cached catalog",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P1",
+      "body": "<!-- phytominer-backlog:B01 -->\n\nPriority: **P1**\n\n### Problem\n\nUnknown target names currently look like valid selections with no matches.\n\n### Scope\n\nResolve supported organism IDs and exact names using cached service metadata; distinguish invalid selection from no homologs.\n\n### Acceptance criteria\n\n- [ ] Unknown and ambiguous selections raise actionable errors.\n- [ ] Valid organisms with no reported matches return a valid empty result.\n- [ ] Catalog reuse avoids whole-genome enumeration.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/workflows.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [],
+      "close_after_verified": false,
+      "acceptance": [
+        "Unknown and ambiguous selections raise actionable errors.",
+        "Valid organisms with no reported matches return a valid empty result.",
+        "Catalog reuse avoids whole-genome enumeration."
+      ]
+    },
+    {
+      "id": "B02",
+      "title": "[B02] Preserve authoritative source identity when features are missing",
+      "labels": [
+        "bug"
+      ],
+      "priority": "P1",
+      "body": "<!-- phytominer-backlog:B02 -->\n\nPriority: **P1**\n\n### Problem\n\nFeature-dependent normalization previously discarded reported source relationships.\n\n### Scope\n\nCarry source identity from XML request context; preserve missing feature evidence without inventing target IDs.\n\n### Acceptance criteria\n\n- [ ] Missing source, target and both-side features retain reported rows.\n- [ ] Request source IDs remain populated; conflicting evidence fails.\n- [ ] Root provenance and unresolved diagnostics are verified.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nFully addressed by the 1.0.1 correctness work; close after exact-SHA CI and acceptance verification.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/workflows.py)\n\nVerified release CI: {{ci_url}}\n\nFix commits: [b583b28](https://github.com/karikris/PhytoMiner/commit/b583b28), [e111ad4](https://github.com/karikris/PhytoMiner/commit/e111ad4), [4690de0](https://github.com/karikris/PhytoMiner/commit/4690de0)\nRegression evidence: `tests/test_correctness.py`; all acceptance criteria must be verified before closure.\n",
+      "dependencies": [],
+      "close_after_verified": true,
+      "acceptance": [
+        "Missing source, target and both-side features retain reported rows.",
+        "Request source IDs remain populated; conflicting evidence fails.",
+        "Root provenance and unresolved diagnostics are verified."
+      ]
+    },
+    {
+      "id": "B03",
+      "title": "[B03] Add per-seed outcome statuses",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P1",
+      "body": "<!-- phytominer-backlog:B03 -->\n\nPriority: **P1**\n\n### Problem\n\nAn empty relationship result alone does not explain each seed outcome.\n\n### Scope\n\nExpose resolved, missing, no-homolog and failed outcomes with clear distinctions.\n\n### Acceptance criteria\n\n- [ ] Every input seed has a documented outcome.\n- [ ] Successful empty responses and failed retrieval remain distinct.\n- [ ] Duplicate labels do not multiply scientific counts.\n\n### Dependencies\n\nB01\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/workflows.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [
+        "B01"
+      ],
+      "close_after_verified": false,
+      "acceptance": [
+        "Every input seed has a documented outcome.",
+        "Successful empty responses and failed retrieval remain distinct.",
+        "Duplicate labels do not multiply scientific counts."
+      ]
+    },
+    {
+      "id": "B04",
+      "title": "[B04] Attach retrieval timestamps and query provenance to evidence",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P1",
+      "body": "<!-- phytominer-backlog:B04 -->\n\nPriority: **P1**\n\n### Problem\n\nRun-wide metadata does not directly identify the query and retrieval time behind each evidence record.\n\n### Scope\n\nLink relationship evidence to stable request IDs and timestamps without duplicating large metadata on every row.\n\n### Acceptance criteria\n\n- [ ] Each evidence record links to its originating query.\n- [ ] Resume preserves original retrieval timestamps.\n- [ ] Refresh records a new retrieval event.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/storage.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [],
+      "close_after_verified": false,
+      "acceptance": [
+        "Each evidence record links to its originating query.",
+        "Resume preserves original retrieval timestamps.",
+        "Refresh records a new retrieval event."
+      ]
+    },
+    {
+      "id": "B05",
+      "title": "[B05] Bound expansion by genes requests time and output size",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P1",
+      "body": "<!-- phytominer-backlog:B05 -->\n\nPriority: **P1**\n\n### Problem\n\nDepth alone cannot bound broad homolog graphs or large outputs.\n\n### Scope\n\nAdd explicit resource budgets and report why traversal stopped.\n\n### Acceptance criteria\n\n- [ ] Gene, request, time and size limits are configurable.\n- [ ] Budget exhaustion is distinguished from full completion.\n- [ ] Cycle and multi-root tests cover limits.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/workflows.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [],
+      "close_after_verified": false,
+      "acceptance": [
+        "Gene, request, time and size limits are configurable.",
+        "Budget exhaustion is distinguished from full completion.",
+        "Cycle and multi-root tests cover limits."
+      ]
+    },
+    {
+      "id": "B06",
+      "title": "[B06] Persist traversal state for expansion resume",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P2",
+      "body": "<!-- phytominer-backlog:B06 -->\n\nPriority: **P2**\n\n### Problem\n\nRaw requests resume but traversal state is reconstructed from the beginning.\n\n### Scope\n\nPersist frontier, visited nodes, root provenance and level completion transactionally.\n\n### Acceptance criteria\n\n- [ ] Interrupted expansion resumes from a validated level.\n- [ ] Changed inputs invalidate incompatible traversal state.\n- [ ] Resumed and uninterrupted results agree.\n\n### Dependencies\n\nB05, B11\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/workflows.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [
+        "B05",
+        "B11"
+      ],
+      "close_after_verified": false,
+      "acceptance": [
+        "Interrupted expansion resumes from a validated level.",
+        "Changed inputs invalidate incompatible traversal state.",
+        "Resumed and uninterrupted results agree."
+      ]
+    },
+    {
+      "id": "B07",
+      "title": "[B07] Reuse resolved organism and gene identities",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P2",
+      "body": "<!-- phytominer-backlog:B07 -->\n\nPriority: **P2**\n\n### Problem\n\nIdentity resolution may repeat across requests and traversal levels.\n\n### Scope\n\nCache validated organism/gene identity mappings using service and metadata context.\n\n### Acceptance criteria\n\n- [ ] Repeated identities avoid redundant feature requests.\n- [ ] Ambiguous mappings remain errors.\n- [ ] Refresh and metadata changes invalidate affected mappings.\n\n### Dependencies\n\nB01\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/workflows.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [
+        "B01"
+      ],
+      "close_after_verified": false,
+      "acceptance": [
+        "Repeated identities avoid redundant feature requests.",
+        "Ambiguous mappings remain errors.",
+        "Refresh and metadata changes invalidate affected mappings."
+      ]
+    },
+    {
+      "id": "B08",
+      "title": "[B08] Restrict target organisms before expensive enrichment",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P2",
+      "body": "<!-- phytominer-backlog:B08 -->\n\nPriority: **P2**\n\n### Problem\n\nTarget filtering currently follows broad identity resolution.\n\n### Scope\n\nApply only verified service-side restrictions or validated local prefilters before enrichment.\n\n### Acceptance criteria\n\n- [ ] Restricted and unrestricted-then-filtered results agree.\n- [ ] Exclude unwanted enrichment requests in a fixed workload.\n- [ ] Unsupported service restrictions fail explicitly.\n\n### Dependencies\n\nB01, B07\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/biomart.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [
+        "B01",
+        "B07"
+      ],
+      "close_after_verified": false,
+      "acceptance": [
+        "Restricted and unrestricted-then-filtered results agree.",
+        "Exclude unwanted enrichment requests in a fixed workload.",
+        "Unsupported service restrictions fail explicitly."
+      ]
+    },
+    {
+      "id": "B09",
+      "title": "[B09] Replace positional normalization with explicit mappings",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P1",
+      "body": "<!-- phytominer-backlog:B09 -->\n\nPriority: **P1**\n\n### Problem\n\nField renaming based on schema position is fragile when internal context columns are added.\n\n### Scope\n\nMap documented BioMart attribute names to internal field names explicitly.\n\n### Acceptance criteria\n\n- [ ] Ortholog normalization is independent of raw column order.\n- [ ] Extra request-context columns cannot shift mappings.\n- [ ] Source identity regression tests pass.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nFully addressed by the 1.0.1 correctness work; close after exact-SHA CI and acceptance verification.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/workflows.py)\n\nVerified release CI: {{ci_url}}\n\nFix commits: [b583b28](https://github.com/karikris/PhytoMiner/commit/b583b28)\nRegression evidence: `tests/test_correctness.py`; all acceptance criteria must be verified before closure.\n",
+      "dependencies": [],
+      "close_after_verified": true,
+      "acceptance": [
+        "Ortholog normalization is independent of raw column order.",
+        "Extra request-context columns cannot shift mappings.",
+        "Source identity regression tests pass."
+      ]
+    },
+    {
+      "id": "B10",
+      "title": "[B10] Define complete schemas for every dataset kind",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P1",
+      "body": "<!-- phytominer-backlog:B10 -->\n\nPriority: **P1**\n\n### Problem\n\nKnown tables have partial contracts; auxiliary and derived tables lack complete dataset-kind requirements.\n\n### Scope\n\nDefine required tables, types, grains and nullable fields for homolog, feature and annotation datasets.\n\n### Acceptance criteria\n\n- [ ] Missing required tables and wrong types are rejected.\n- [ ] Auxiliary status/provenance tables have explicit contracts.\n- [ ] Supported old schemas remain readable under documented rules.\n\n### Dependencies\n\nB11\n\n### Implementation context\n\nSchema-2 relationship diagnostics and schema-1 reading are implemented; dataset-kind completeness remains open.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/models.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [
+        "B11"
+      ],
+      "close_after_verified": false,
+      "acceptance": [
+        "Missing required tables and wrong types are rejected.",
+        "Auxiliary status/provenance tables have explicit contracts.",
+        "Supported old schemas remain readable under documented rules."
+      ]
+    },
+    {
+      "id": "B11",
+      "title": "[B11] Version processing contracts in result identity",
+      "labels": [
+        "bug"
+      ],
+      "priority": "P1",
+      "body": "<!-- phytominer-backlog:B11 -->\n\nPriority: **P1**\n\n### Problem\n\nCompatible raw XML can require corrected processing after normalization changes.\n\n### Scope\n\nVersion processed-result identities separately from raw request format and dataset schema.\n\n### Acceptance criteria\n\n- [ ] Old processed results cannot satisfy a newer processing contract.\n- [ ] Validated compatible raw requests are reused.\n- [ ] Equivalent scientific selections retain deterministic identity.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nFully addressed by the 1.0.1 correctness work; close after exact-SHA CI and acceptance verification.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/workflows.py)\n\nVerified release CI: {{ci_url}}\n\nFix commits: [6de7d5a](https://github.com/karikris/PhytoMiner/commit/6de7d5a)\nRegression evidence: `tests/test_correctness.py`; all acceptance criteria must be verified before closure.\n",
+      "dependencies": [],
+      "close_after_verified": true,
+      "acceptance": [
+        "Old processed results cannot satisfy a newer processing contract.",
+        "Validated compatible raw requests are reused.",
+        "Equivalent scientific selections retain deterministic identity."
+      ]
+    },
+    {
+      "id": "B12",
+      "title": "[B12] Strengthen derived dataset identity",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P1",
+      "body": "<!-- phytominer-backlog:B12 -->\n\nPriority: **P1**\n\n### Problem\n\nAnnotation identity uses the parent query identity and file bytes but omits parent content and import options.\n\n### Scope\n\nInclude parent generation content fingerprints and interpretation settings in derived identities.\n\n### Acceptance criteria\n\n- [ ] Different header or column mappings produce distinct identities.\n- [ ] Refreshed parent content cannot collide with old derived output.\n- [ ] Identical inputs and options remain deterministic.\n\n### Dependencies\n\nB11\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/workflows.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [
+        "B11"
+      ],
+      "close_after_verified": false,
+      "acceptance": [
+        "Different header or column mappings produce distinct identities.",
+        "Refreshed parent content cannot collide with old derived output.",
+        "Identical inputs and options remain deterministic."
+      ]
+    },
+    {
+      "id": "B13",
+      "title": "[B13] Add cache inspection and safe garbage collection",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P2",
+      "body": "<!-- phytominer-backlog:B13 -->\n\nPriority: **P2**\n\n### Problem\n\nRequests, scratch files and old generations accumulate without inspection tools.\n\n### Scope\n\nExpose cache size/state and preview deletion of unreferenced generations while protecting published data.\n\n### Acceptance criteria\n\n- [ ] Inspection reports complete, failed and unused artifacts.\n- [ ] Dry-run cleanup identifies exact files.\n- [ ] Published and pinned generation protection is documented and tested.\n\n### Dependencies\n\nB10\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/storage.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [
+        "B10"
+      ],
+      "close_after_verified": false,
+      "acceptance": [
+        "Inspection reports complete, failed and unused artifacts.",
+        "Dry-run cleanup identifies exact files.",
+        "Published and pinned generation protection is documented and tested."
+      ]
+    },
+    {
+      "id": "B14",
+      "title": "[B14] Offer explicit dataset verification modes",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P2",
+      "body": "<!-- phytominer-backlog:B14 -->\n\nPriority: **P2**\n\n### Problem\n\nEvery dataset open hashes all files, which can be expensive for large local datasets.\n\n### Scope\n\nKeep full verification as default and design an explicit metadata-only mode with clear limits.\n\n### Acceptance criteria\n\n- [ ] Default behavior retains full integrity checks.\n- [ ] Modes are explicit and documented.\n- [ ] Benchmarks separate opening cost from query execution.\n\n### Dependencies\n\nB10\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/dataset.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [
+        "B10"
+      ],
+      "close_after_verified": false,
+      "acceptance": [
+        "Default behavior retains full integrity checks.",
+        "Modes are explicit and documented.",
+        "Benchmarks separate opening cost from query execution."
+      ]
+    },
+    {
+      "id": "B15",
+      "title": "[B15] Add cancellation and overall run deadlines",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P1",
+      "body": "<!-- phytominer-backlog:B15 -->\n\nPriority: **P1**\n\n### Problem\n\nIndividual timeouts do not provide a bounded total job duration or clean cancellation.\n\n### Scope\n\nCoordinate cancellation across requests, queued work, storage and publication.\n\n### Acceptance criteria\n\n- [ ] Cancelled jobs release locks and sessions.\n- [ ] Prior complete publications remain readable.\n- [ ] Validated completed requests remain resumable.\n\n### Dependencies\n\nB05\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/biomart.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [
+        "B05"
+      ],
+      "close_after_verified": false,
+      "acceptance": [
+        "Cancelled jobs release locks and sessions.",
+        "Prior complete publications remain readable.",
+        "Validated completed requests remain resumable."
+      ]
+    },
+    {
+      "id": "B16",
+      "title": "[B16] Coordinate endpoint limits across clients",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P2",
+      "body": "<!-- phytominer-backlog:B16 -->\n\nPriority: **P2**\n\n### Problem\n\nEach client independently enforces rate and concurrency limits.\n\n### Scope\n\nShare endpoint limits within a process and explicitly document multi-process behavior.\n\n### Acceptance criteria\n\n- [ ] Multiple clients cannot multiply the configured shared rate.\n- [ ] Cooldown is respected across participating clients.\n- [ ] Session ownership and independent endpoints remain correct.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/biomart.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [],
+      "close_after_verified": false,
+      "acceptance": [
+        "Multiple clients cannot multiply the configured shared rate.",
+        "Cooldown is respected across participating clients.",
+        "Session ownership and independent endpoints remain correct."
+      ]
+    },
+    {
+      "id": "B17",
+      "title": "[B17] Add per-run metrics and stage diagnostics",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P2",
+      "body": "<!-- phytominer-backlog:B17 -->\n\nPriority: **P2**\n\n### Problem\n\nClient-lifetime metrics can mix runs and omit cache activity and stage timings.\n\n### Scope\n\nProvide per-run request/cache/retry/resolution metrics with structured progress hooks.\n\n### Acceptance criteria\n\n- [ ] Run metrics exclude prior client activity.\n- [ ] Cache hits and unresolved records are counted.\n- [ ] Stage timings and retry causes are inspectable without sensitive payload logging.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/biomart.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [],
+      "close_after_verified": false,
+      "acceptance": [
+        "Run metrics exclude prior client activity.",
+        "Cache hits and unresolved records are counted.",
+        "Stage timings and retry causes are inspectable without sensitive payload logging."
+      ]
+    },
+    {
+      "id": "B18",
+      "title": "[B18] Improve public typing and exception contracts",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P2",
+      "body": "<!-- phytominer-backlog:B18 -->\n\nPriority: **P2**\n\n### Problem\n\nPublic workflows have limited annotations and some invalid inputs surface library-specific exceptions.\n\n### Scope\n\nAdd input/return types, documented exceptions and typed diagnostics without forcing heavy imports.\n\n### Acceptance criteria\n\n- [ ] Type-check public examples.\n- [ ] Validation errors are consistent at API boundaries.\n- [ ] Lazy import boundaries remain covered.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/__init__.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [],
+      "close_after_verified": false,
+      "acceptance": [
+        "Type-check public examples.",
+        "Validation errors are consistent at API boundaries.",
+        "Lazy import boundaries remain covered."
+      ]
+    },
+    {
+      "id": "B19",
+      "title": "[B19] Strengthen annotation import validation",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P1",
+      "body": "<!-- phytominer-backlog:B19 -->\n\nPriority: **P1**\n\n### Problem\n\nMissing columns, reserved names and interpretation errors can surface late during joins.\n\n### Scope\n\nValidate column mappings, whitespace, reserved diagnostics and identifier types before joining.\n\n### Acceptance criteria\n\n- [ ] Missing or conflicting columns produce actionable errors.\n- [ ] Whitespace policy is explicit.\n- [ ] Duplicate and null key cases preserve current cardinality guarantees.\n\n### Dependencies\n\nB18\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/workflows.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [
+        "B18"
+      ],
+      "close_after_verified": false,
+      "acceptance": [
+        "Missing or conflicting columns produce actionable errors.",
+        "Whitespace policy is explicit.",
+        "Duplicate and null key cases preserve current cardinality guarantees."
+      ]
+    },
+    {
+      "id": "B20",
+      "title": "[B20] Separate workflow orchestration components",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P2",
+      "body": "<!-- phytominer-backlog:B20 -->\n\nPriority: **P2**\n\n### Problem\n\nTraversal, normalization, annotations and lifecycle logic share a large module.\n\n### Scope\n\nExtract focused internal components while preserving the public API and scientific behavior.\n\n### Acceptance criteria\n\n- [ ] Public API and results remain compatible.\n- [ ] Tests target component boundaries.\n- [ ] Cache and publication logic are not duplicated.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/phytominer/workflows.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [],
+      "close_after_verified": false,
+      "acceptance": [
+        "Public API and results remain compatible.",
+        "Tests target component boundaries.",
+        "Cache and publication logic are not duplicated."
+      ]
+    },
+    {
+      "id": "B21",
+      "title": "[B21] Add formatting linting and static checking",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P2",
+      "body": "<!-- phytominer-backlog:B21 -->\n\nPriority: **P2**\n\n### Problem\n\nThe current CI focuses on execution and packaging.\n\n### Scope\n\nChoose Python-3.15-compatible tooling and enforce formatting, linting and type checks incrementally.\n\n### Acceptance criteria\n\n- [ ] Selected tools parse explicit lazy imports.\n- [ ] Checks run reproducibly in CI.\n- [ ] Suppressions are narrow and justified.\n\n### Dependencies\n\nB18\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/pyproject.toml)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [
+        "B18"
+      ],
+      "close_after_verified": false,
+      "acceptance": [
+        "Selected tools parse explicit lazy imports.",
+        "Checks run reproducibly in CI.",
+        "Suppressions are narrow and justified."
+      ]
+    },
+    {
+      "id": "B22",
+      "title": "[B22] Add property based scientific and cache tests",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P1",
+      "body": "<!-- phytominer-backlog:B22 -->\n\nPriority: **P1**\n\n### Problem\n\nFixed fixtures leave combinations of graph shape and request normalization unexplored.\n\n### Scope\n\nGenerate small graphs and selections to test invariants against a simple reference model.\n\n### Acceptance criteria\n\n- [ ] Generated cases cover cycles, roots and missing features.\n- [ ] Cache equivalence matches canonical selection semantics.\n- [ ] Deterministic seeds and minimized failures support reproduction.\n\n### Dependencies\n\nB11\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/tests/test_correctness.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [
+        "B11"
+      ],
+      "close_after_verified": false,
+      "acceptance": [
+        "Generated cases cover cycles, roots and missing features.",
+        "Cache equivalence matches canonical selection semantics.",
+        "Deterministic seeds and minimized failures support reproduction."
+      ]
+    },
+    {
+      "id": "B23",
+      "title": "[B23] Require meaningful nonempty documentation fixtures",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P2",
+      "body": "<!-- phytominer-backlog:B23 -->\n\nPriority: **P2**\n\n### Problem\n\nExample tests can pass when the fixture produces no relationships for example organism IDs.\n\n### Scope\n\nUse scientifically consistent fixtures and assert expected seed/target identities and nonempty results.\n\n### Acceptance criteria\n\n- [ ] Executable examples assert exact expected evidence.\n- [ ] README blocks exercise both Polars and SQL meaningfully.\n- [ ] Ordinary example tests remain offline.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/tests/test_examples.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [],
+      "close_after_verified": false,
+      "acceptance": [
+        "Executable examples assert exact expected evidence.",
+        "README blocks exercise both Polars and SQL meaningfully.",
+        "Ordinary example tests remain offline."
+      ]
+    },
+    {
+      "id": "B24",
+      "title": "[B24] Benchmark the complete retrieval workflow",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P2",
+      "body": "<!-- phytominer-backlog:B24 -->\n\nPriority: **P2**\n\n### Problem\n\nThe synthetic benchmark mainly measures generated Parquet analytics, not XML parsing or traversal.\n\n### Scope\n\nMeasure parsing, identity resolution, expansion, refresh and resume separately with deterministic fixtures.\n\n### Acceptance criteria\n\n- [ ] Report stage times, memory and request counts.\n- [ ] Resume makes zero retrieval requests when unchanged.\n- [ ] No remote throughput claims are inferred from offline timings.\n\n### Dependencies\n\nB17\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/scripts/benchmark_dataset.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [
+        "B17"
+      ],
+      "close_after_verified": false,
+      "acceptance": [
+        "Report stage times, memory and request counts.",
+        "Resume makes zero retrieval requests when unchanged.",
+        "No remote throughput claims are inferred from offline timings."
+      ]
+    },
+    {
+      "id": "B25",
+      "title": "[B25] Diversify benchmark data and cardinalities",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P2",
+      "body": "<!-- phytominer-backlog:B25 -->\n\nPriority: **P2**\n\n### Problem\n\nRepetitive identifiers and organism values can favor compression and memory behavior.\n\n### Scope\n\nAdd varied genes, organisms, groups, transcripts and relationship distributions with fixed seeds.\n\n### Acceptance criteria\n\n- [ ] Include low/high cardinality scenarios.\n- [ ] Record native memory and file sizes with platform limitations.\n- [ ] Compare results against known counts across scales.\n\n### Dependencies\n\nB24\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/scripts/benchmark_dataset.py)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [
+        "B24"
+      ],
+      "close_after_verified": false,
+      "acceptance": [
+        "Include low/high cardinality scenarios.",
+        "Record native memory and file sizes with platform limitations.",
+        "Compare results against known counts across scales."
+      ]
+    },
+    {
+      "id": "B26",
+      "title": "[B26] Test minimum supported dependency versions",
+      "labels": [
+        "enhancement"
+      ],
+      "priority": "P2",
+      "body": "<!-- phytominer-backlog:B26 -->\n\nPriority: **P2**\n\n### Problem\n\nLocked-environment CI alone does not validate every advertised dependency lower bound.\n\n### Scope\n\nTest the lowest supported dependency set separately from the lockfile on Python 3.15.\n\n### Acceptance criteria\n\n- [ ] Minimum and locked sets both pass API/packaging tests.\n- [ ] Dependency ranges reflect actual supported versions.\n- [ ] Version-specific API examples remain verified.\n\n### Dependencies\n\nNone required.\n\n### Implementation context\n\nOpen follow-up; not implemented by the three correctness fixes.\n\nCode: [repository source](https://github.com/karikris/PhytoMiner/blob/{{release_sha}}/pyproject.toml)\n\nVerified release CI: {{ci_url}}\n",
+      "dependencies": [],
+      "close_after_verified": false,
+      "acceptance": [
+        "Minimum and locked sets both pass API/packaging tests.",
+        "Dependency ranges reflect actual supported versions.",
+        "Version-specific API examples remain verified."
+      ]
+    }
+  ],
+  "tracker": {
+    "title": "PhytoMiner improvement backlog after 1.0.1 correctness fixes",
+    "labels": [
+      "enhancement"
+    ],
+    "marker": "<!-- phytominer-backlog:tracker -->",
+    "body_template": "Track all 26 reviewed improvements. Three fully addressed items link to the accepted correctness fixes; the remaining items stay open.\n\n{{checklist}}\n\nRelease commit: {{release_sha}}\n\nCI: {{ci_url}}"
+  }
+}
