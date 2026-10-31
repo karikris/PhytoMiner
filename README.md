@@ -1,7 +1,7 @@
 # PhytoMiner
 
 Phytozome BioMart XML retrieval with Polars, Parquet and DuckDB, on **Python 3.15+**.
-Version 1.0 provides a new dataset API. See [migration notes](docs/MIGRATION.md).
+Version 1.0.1 provides a new dataset API. See [migration notes](docs/MIGRATION.md).
 
 ```bash
 pip install phytominer
@@ -59,16 +59,21 @@ Tables include `seeds`, `genes`, `organisms`, `relationships`, `provenance`,
 transcripts. Relationships retain organism names alongside organism IDs.
 
 Phytozome can report relationships whose genes are absent from feature queries.
-Those relationships remain in the output with null unresolved IDs, appear in
-`unresolved_relationships`, and count in `manifest['unresolved_identity_rows']`.
+Those relationships remain in the output. Requested source IDs stay populated;
+unresolved target IDs stay null. Schema-2 relationships include
+`source_resolution_status` and `target_resolution_status`, each `resolved` or
+`missing_feature`. Either missing side places the row in `unresolved_relationships`
+and contributes to `manifest['unresolved_identity_rows']`.
 Expansion skips identities it cannot resolve; ambiguous identities raise an error.
 An unmatched gene is distinct from a successfully resolved gene with no homologs.
 
 An unchanged validated run resumes without network retrieval. Request identity,
 metadata fingerprints, checksums, schemas and row counts guard cache reuse.
 Use `refresh=True` to refresh metadata and request results. A metadata fingerprint
-does not detect every remote data update. Failed or incomplete runs cannot be
-opened as complete datasets. Only one writer may use an output directory; after a
+does not detect every remote data update. New generations are staged privately and validated before the root manifest is
+replaced atomically. Failed replacements leave the last complete generation
+readable; first-ever incomplete runs remain unavailable. Existing reader handles
+stay pinned to their generation. Only one writer may use an output directory; after a
 crash remove `.writer.lock` only after confirming the original process has stopped.
 Old table generations are retained; remove unused run directories explicitly.
 

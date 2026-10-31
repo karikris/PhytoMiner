@@ -324,3 +324,15 @@ monkeypatch.context contract re-read. Combined None-to-empty selection, changed
 source evidence, failed refresh and raw-only rebuild in one directory verified;
 old handles stay pinned. Candidate-validation failure during refresh also leaves
 the old root manifest unchanged. Targeted/cumulative suite and diff checks PASS.
+
+## Task 4.2 — Release 1.0.1
+Previous handshake: da876d9. GitHits CPython v3.15.2 email.parser.rst:265-275
+verifies package metadata parsing. Release audit checks dynamic version agreement
+rather than hard-coding 1.0.0. Single version source is now 1.0.1. Changelog and
+migration notes document target semantics, processing contract 2, schema 2,
+schema-1 reads and atomic generation publication.
+Acceptance PASS: 94 tests; clean wheel/sdist build; isolated 1.0.1 wheel install;
+legacy-removal audit; million-row SQL/Polars parity; fresh-process lazy imports.
+Million-row local run: 0.174s, 452470 Parquet bytes, 621748224 peak RSS bytes.
+Import harness median: lazy import 0.000201s, first use 0.352530s; eager import
+0.433252s, first use 0.021756s. Measurements are machine/workload-specific.
