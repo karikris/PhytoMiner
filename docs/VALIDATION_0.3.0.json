@@ -1,8 +1,8 @@
 {
   "version": "0.3.0",
   "python": "3.15.2",
-  "locked_tests": 124,
-  "minimum_tests": 124,
+  "locked_tests": 131,
+  "minimum_tests": 131,
   "static_checks": [
     "ruff",
     "pyright"
@@ -121,5 +121,6 @@
     "Native RSS is platform dependent and unavailable on Windows.",
     "Stage timings are nested and must not be summed.",
     "Measurements captured during the final development gate; exact-SHA CI repeats validation."
-  ]
+  ],
+  "release_gate_tests": 7
 }

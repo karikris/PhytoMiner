@@ -1,0 +1,42 @@
+name: Publish to PyPI
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: phytominer-pypi
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.15.2'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.11.19'
+      - run: uv sync --locked --extra dev
+      - name: Require the release tag and exact-commit verification
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: uv run --no-sync python scripts/check_publish.py
+      - run: uv build
+      - run: uv run --no-sync python scripts/check_wheel.py
+      - run: uv run --no-sync python scripts/audit_release.py
+      - name: Record package version
+        run: uv run --no-sync python -c 'import phytominer; print("RELEASE_VERSION=" + phytominer.__version__)' >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pypi-distributions
+          path: |
+            dist/*.whl
+            dist/*.tar.gz
+          if-no-files-found: error
+      - name: Publish the verified distributions
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        run: uv publish --trusted-publishing never "dist/phytominer-${RELEASE_VERSION}-py3-none-any.whl" "dist/phytominer-${RELEASE_VERSION}.tar.gz"

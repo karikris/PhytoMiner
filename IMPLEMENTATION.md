@@ -503,3 +503,20 @@ schema versions retain their independent meanings.
 Task handshake PASS: 124 tests, Ruff formatting/lint, Pyright, source/wheel build,
 isolated 0.3.0 wheel installation and legacy-removal audit passed. Updated release
 documents contain no higher PhytoMiner release numbers.
+
+## 0.3.0 manual publication
+
+Previous handshake: b08c2d3. GitHits reviewed uv 0.11.19 at 7b2cff1c,
+crates/uv-static/src/env_vars.rs:285-311, confirming UV_PUBLISH_TOKEN support;
+local uv help verified explicit file selection and disabling trusted-publisher
+autodetection when using the stored token. Added a manual, tag-only workflow
+with exact-SHA five-job Verify gating, audited build, isolated wheel check and
+artifact retention. The existing GitHub secret is scoped to the upload step.
+Seven gate tests reject wrong tags, missing/failed jobs, wrong commits and absent
+successful runs. No push or release event publishes automatically.
+
+Task and local phase handshake PASS: all 131 tests pass in locked and
+minimum-direct environments; Ruff formatting/lint, Pyright, package build,
+isolated wheel installation and the legacy-removal audit pass. GitHub issue
+records will use 0.3.0 and the renamed documents. Publication is authorized by
+the user and still requires fresh exact-SHA remote CI before dispatch.

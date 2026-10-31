@@ -103,6 +103,7 @@ uv build
 CI validates Python 3.15.2 on Linux, macOS and Windows. Offline tests require no
 Phytozome access. `examples/workflow.py` is an executable live example, tested with
 an injected fixture client. Details and research evidence: [implementation ledger](IMPLEMENTATION.md).
+Package publication: [release procedure](docs/RELEASING.md).
 
 License: [MIT](LICENSE).
 
