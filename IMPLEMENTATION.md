@@ -369,3 +369,7 @@ issues. Final SHA, CI URL and issue URLs are recorded in the completion report.
 | 4.1 Combined regressions | da876d9 |
 | 4.2 Release preparation | 37b79e0 |
 | 4.3 Backlog preparation | Final completion SHA |
+
+## 1.0.2 task 1.1
+Previous handshake: 1673b22. GitHits Polars 2.1.0 lazy-frame contracts reviewed. Public facade and monkeypatch seams preserved.
+Cumulative offline suite and diff checks PASS. Task commit/clean-tree handshake required.
