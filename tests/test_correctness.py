@@ -185,3 +185,49 @@ def test_schema_two_deterministic_missing_evidence(tmp_path, workers):
     assert result.scan('provenance').collect().height == 3
     assert result.manifest['unresolved_identity_rows'] == 2
     assert result.scan('seeds').collect().height == 3
+
+
+def test_combined_selection_missing_source_and_failed_refresh(tmp_path, monkeypatch):
+    from phytominer.dataset import DatasetWriter, HomologDataset
+    original_client = FixtureClient()
+    original = fetch_homologs([Seed('1','a')], output_dir=tmp_path, client=original_client)
+    assert original.scan('relationships').collect()['source_resolution_status'].to_list() == ['resolved']
+    empty = fetch_homologs([Seed('1','a')], target_organisms=[], output_dir=tmp_path, client=original_client)
+    assert empty.scan('relationships').collect().is_empty()
+    before = (tmp_path/'manifest.json').read_bytes()
+    missing = MissingFeatures({'org1'})
+    write = DatasetWriter.write
+    def fail_relationships(self, name, frame):
+        if name == 'relationships': raise OSError('interrupted replacement')
+        return write(self, name, frame)
+    with monkeypatch.context() as patch:
+        patch.setattr(DatasetWriter, 'write', fail_relationships)
+        with pytest.raises(OSError, match='interrupted'):
+            fetch_homologs([Seed('1','a')], target_organisms=['org2'], output_dir=tmp_path, client=missing, refresh=True)
+    assert (tmp_path/'manifest.json').read_bytes() == before
+    assert HomologDataset(tmp_path).scan('relationships').collect().is_empty()
+    count = len(missing.calls)
+    rebuilt = fetch_homologs([Seed('1','a')], target_organisms=['org2'], output_dir=tmp_path, client=missing)
+    assert len(missing.calls) == count
+    assert rebuilt.manifest['unresolved_identity_rows'] == 1
+    assert rebuilt.scan('relationships').collect()['source_organism_id'].to_list() == ['1']
+    assert original.scan('relationships').collect()['source_resolution_status'].to_list() == ['resolved']
+    assert empty.scan('relationships').collect().is_empty()
+
+
+def test_candidate_validation_failure_during_refresh_keeps_old(tmp_path, monkeypatch):
+    import phytominer.dataset as module
+    original = fetch_homologs([Seed('1','a')], output_dir=tmp_path, client=FixtureClient())
+    before = (tmp_path/'manifest.json').read_bytes()
+    validate = module._validate_manifest
+    def reject_candidate(root, manifest):
+        if manifest['created_at'] != original.manifest['created_at']:
+            raise IncompleteDatasetError('injected candidate rejection')
+        return validate(root, manifest)
+    from phytominer import IncompleteDatasetError
+    with monkeypatch.context() as patch:
+        patch.setattr(module, '_validate_manifest', reject_candidate)
+        with pytest.raises(IncompleteDatasetError, match='candidate rejection'):
+            fetch_homologs([Seed('1','a')], output_dir=tmp_path, client=FixtureClient(), refresh=True)
+    assert (tmp_path/'manifest.json').read_bytes() == before
+    assert module.HomologDataset(tmp_path).manifest == original.manifest

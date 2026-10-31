@@ -317,3 +317,10 @@ Cumulative suite/diff checks PASS; task commit/clean-tree handshake PASS.
 Every task PASS: first runs stay unpublished until valid, replacements preserve
 the prior generation on failure, success switches the root manifest atomically.
 No push; proceed to combined regressions and release verification.
+
+## Task 4.1 — Combined regression gate
+Previous handshake: b0a31e4 / Phase 3 PASS. GitHits pytest@9.2.0
+monkeypatch.context contract re-read. Combined None-to-empty selection, changed
+source evidence, failed refresh and raw-only rebuild in one directory verified;
+old handles stay pinned. Candidate-validation failure during refresh also leaves
+the old root manifest unchanged. Targeted/cumulative suite and diff checks PASS.
