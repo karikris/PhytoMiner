@@ -74,14 +74,59 @@ def _resolve(client, cache, raw, scratch):
         edges = edges.join(lookup, on=[side+'_organism_name',side+'_gene_name'], how='left', validate='m:1')
     return edges.select(TABLES['relationships']).unique(), features
 
+def _discover(client, cache, seeds, targets, expansion_depth, scratch):
+    roots = sorted({(s.organism_id,s.gene_name) for s in seeds})
+    frontier = {root: {root} for root in roots}
+    visited = {root: {root} for root in roots}
+    queried = set()
+    edge_parts, feature_parts, provenance_parts = [], [], []
+    all_edges = _empty(TABLES['relationships'])
+    for depth in range(1, expansion_depth + 2):
+        needed = set().union(*frontier.values()) - queried
+        if needed:
+            raw = _raw(client,cache,_jobs(needed,client.config.batch_size))
+            edges, features = _resolve(client,cache,raw,scratch) if raw is not None else (_empty(TABLES['relationships']),_empty(TABLES['features']))
+            sources = pl.LazyFrame([{'source_organism_id':o,'source_gene_name':g} for o,g in sorted(needed)])
+            edges = edges.join(sources,on=['source_organism_id','source_gene_name'],how='semi')
+            if targets is not None:
+                allowed = features.filter(pl.col('organism_id').is_in(targets) | pl.col('organism_name').is_in(targets)).select(pl.col('organism_id').alias('target_organism_id')).unique()
+                edges = edges.join(allowed,on='target_organism_id',how='semi')
+            edge_path = scratch / f'edges-{depth}.parquet'
+            feature_path = scratch / f'features-{depth}.parquet'
+            edges.sink_parquet(edge_path); features.sink_parquet(feature_path)
+            edge_parts.append(edge_path); feature_parts.append(feature_path)
+            all_edges = pl.scan_parquet(edge_parts).unique()
+            queried.update(needed)
+        front = [{'root_organism_id':r[0], 'root_gene_name':r[1], 'source_organism_id':n[0], 'source_gene_name':n[1]}
+                 for r,nodes in frontier.items() for n in nodes]
+        if not front:
+            break
+        step = all_edges.join(pl.LazyFrame(front),on=['source_organism_id','source_gene_name'],how='inner').with_columns(pl.lit(depth).alias('depth')).select(TABLES['provenance']).unique()
+        path = scratch / f'provenance-{depth}.parquet'
+        step.sink_parquet(path); provenance_parts.append(path)
+        next_frontier = {root:set() for root in roots}
+        for batch in pq.ParquetFile(path).iter_batches(batch_size=4096):
+            for row in batch.to_pylist():
+                root=(row['root_organism_id'],row['root_gene_name'])
+                node=(row['target_organism_id'],row['target_gene_name'])
+                if node not in visited[root]:
+                    visited[root].add(node); next_frontier[root].add(node)
+        frontier = next_frontier
+        if not any(frontier.values()):
+            break
+    return (all_edges, pl.scan_parquet(feature_parts).unique() if feature_parts else _empty(TABLES['features']),
+            pl.scan_parquet(provenance_parts).unique() if provenance_parts else _empty(TABLES['provenance']))
+
 def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_dir, client=None, refresh=False):
     """Retrieve reported seed relationships; labels never multiply edge evidence."""
     seeds = sorted(set(seed if isinstance(seed, Seed) else Seed(**seed) for seed in seeds),
                    key=lambda s:(s.organism_id,s.gene_name,s.label or ''))
     if not seeds:
         raise ValidationError('At least one seed is required')
-    if expansion_depth != 0:
-        raise ValidationError('Expansion is not available in this milestone')
+    if not isinstance(expansion_depth, int) or isinstance(expansion_depth, bool) or expansion_depth < 0:
+        raise ValidationError('Expansion depth must be a nonnegative integer')
+    if expansion_depth and not target_organisms:
+        raise ValidationError('Expansion requires an explicit organism boundary')
     root = Path(output_dir)
     owned = client is None
     client = client or BioMartClient()
@@ -105,16 +150,7 @@ def fetch_homologs(seeds, *, target_organisms=None, expansion_depth=0, output_di
             writer = DatasetWriter(root, identity)
             seed_frame = pl.LazyFrame([asdict(s) for s in seeds], schema={c:pl.String for c in TABLES['seeds']})
             writer.write('seeds', seed_frame)
-            raw = _raw(client,cache,_jobs(((s.organism_id,s.gene_name) for s in seeds),client.config.batch_size))
-            edges, features = _resolve(client,cache,raw,writer.directory) if raw is not None else (_empty(TABLES['relationships']),_empty(TABLES['features']))
-            if target_organisms is not None:
-                allowed = features.select('organism_id','organism_name').unique().filter(
-                    pl.col('organism_id').is_in(target_organisms) | pl.col('organism_name').is_in(target_organisms))
-                edges = edges.join(allowed.select(pl.col('organism_id').alias('target_organism_id')).unique(),on='target_organism_id',how='semi')
-            roots = seed_frame.select(pl.col('organism_id').alias('source_organism_id'),pl.col('gene_name').alias('source_gene_name')).unique()
-            edges = edges.join(roots,on=['source_organism_id','source_gene_name'],how='semi')
-            provenance = edges.select('source_organism_id','source_gene_name','target_organism_id','target_gene_name').unique().with_columns(
-                pl.col('source_organism_id').alias('root_organism_id'),pl.col('source_gene_name').alias('root_gene_name'),pl.lit(1).alias('depth'))
+            edges, features, provenance = _discover(client, cache, seeds, target_organisms, expansion_depth, writer.directory)
             writer.write('relationships',edges.sort(TABLES['relationships']))
             writer.write('provenance',provenance.select(TABLES['provenance']).sort(TABLES['provenance']))
             genes = pl.concat([seed_frame.select('organism_id','gene_name'), edges.select(pl.col('target_organism_id').alias('organism_id'),pl.col('target_gene_name').alias('gene_name'))]).unique()

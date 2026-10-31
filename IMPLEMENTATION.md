@@ -98,3 +98,11 @@ whole-genome organism scan. Gene-name resolution is checked against exact
 reported organism names; ambiguous/missing identities fail visibly.
 Acceptance: duplicate evidence, multiple labels, transcript grain, novel
 relationships, empty results, target selection and offline resume PASS.
+
+## 4.2 Bounded expansion
+Previous handshake: direct-workflow commit (git log).
+GitHits polars@2.1.0 src/polars/lazyframe/frame.py:6074-6082 verifies semi/anti
+joins. Breadth-first traversal persists each level, tracks visited pairs per
+root and queries each pair once globally. Direct edges retain reported values;
+root discovery depth is separate. Acceptance: cycles, boundaries, multiple roots,
+query-once and depth tests plus cumulative suite PASS.

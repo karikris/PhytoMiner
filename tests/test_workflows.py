@@ -37,3 +37,18 @@ def test_missing_genes_and_targets(tmp_path):
     assert result.scan('relationships').collect().is_empty()
     result=fetch_homologs([Seed('1','a')],target_organisms=['1'],output_dir=tmp_path,client=FixtureClient())
     assert result.scan('relationships').collect().is_empty()
+
+def test_expansion_cycles_and_query_once(tmp_path):
+    c=FixtureClient()
+    result=fetch_homologs([Seed('1','a')],target_organisms=['1','2'],expansion_depth=5,output_dir=tmp_path,client=c)
+    assert result.scan('relationships').collect().height==2
+    assert sorted(result.scan('provenance').collect()['depth'].to_list())==[1,2]
+    assert len([x for x in c.calls if x[0]=='orthologs'])==2
+    with pytest.raises(Exception,match='boundary'):
+        fetch_homologs([Seed('1','a')],expansion_depth=1,output_dir=tmp_path,client=c)
+
+def test_expansion_multiple_roots_and_boundary(tmp_path):
+    c=FixtureClient()
+    result=fetch_homologs([Seed('1','a'),Seed('2','b')],target_organisms=['2'],expansion_depth=2,output_dir=tmp_path,client=c)
+    rows=result.scan('relationships').collect().to_dicts()
+    assert all(r['target_organism_id']=='2' for r in rows)
